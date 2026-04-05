@@ -32,11 +32,11 @@ class TestAmplifierYoutubePackageImports:
         from amplifier_youtube import AudioExtractor  # noqa: F401
 
     def test_all_contains_expected_symbols(self):
-        """__all__ must declare exactly VideoInfo, VideoLoader, AudioExtractor."""
+        """__all__ must declare exactly VideoInfo, VideoLoader, AudioExtractor, YouTubeDownloadTool."""
         import amplifier_youtube
 
         assert hasattr(amplifier_youtube, "__all__")
-        assert set(amplifier_youtube.__all__) == {"VideoInfo", "VideoLoader", "AudioExtractor"}
+        assert set(amplifier_youtube.__all__) == {"VideoInfo", "VideoLoader", "AudioExtractor", "YouTubeDownloadTool"}
 
     def test_video_info_is_dataclass(self):
         """VideoInfo exported from amplifier_youtube should be usable as a dataclass."""
