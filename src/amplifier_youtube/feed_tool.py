@@ -51,7 +51,7 @@ class YouTubeFeedTool:
             "required": ["feed_type"],
         }
 
-    async def execute(self, input: dict[str, Any]) -> ToolResult:
+    async def execute(self, params: dict[str, Any]) -> ToolResult:
         if not self.cookies_file:
             return ToolResult(
                 success=False,
@@ -64,14 +64,14 @@ class YouTubeFeedTool:
                 },
             )
 
-        feed_type = input.get("feed_type")
+        feed_type = params.get("feed_type")
         if feed_type not in self.FEED_MAP:
             return ToolResult(
                 success=False,
                 error={"message": f"Invalid feed_type. Must be one of: {', '.join(self.FEED_MAP)}"},
             )
 
-        limit = input.get("limit", 50)
+        limit = params.get("limit", 50)
         yt_target = self.FEED_MAP[feed_type]
 
         try:
@@ -85,6 +85,14 @@ class YouTubeFeedTool:
 
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(yt_target, download=False)
+
+            if info is None:
+                return ToolResult(
+                    success=False,
+                    error={
+                        "message": f"No data returned for feed '{feed_type}'. The feed may be temporarily unavailable."
+                    },
+                )
 
             items = []
             for entry in info.get("entries") or []:

@@ -1,26 +1,45 @@
 """Tests for YouTubeFeedTool."""
+
 from unittest.mock import MagicMock, patch
+
 import pytest
+
 from amplifier_youtube.feed_tool import YouTubeFeedTool
+
 
 @pytest.fixture
 def tool_with_cookies():
     return YouTubeFeedTool({}, cookies_file="~/test-cookies.txt")
 
+
 @pytest.fixture
 def tool_no_cookies():
     return YouTubeFeedTool({})
+
 
 @pytest.fixture
 def mock_feed_results():
     return {
         "entries": [
-            {"id": "vid001", "title": "History Video 1", "channel": "Ch1",
-             "url": "https://youtube.com/watch?v=vid001", "upload_date": "20250101", "duration": 300},
-            {"id": "vid002", "title": "History Video 2", "channel": "Ch2",
-             "url": "https://youtube.com/watch?v=vid002", "upload_date": "20250102", "duration": 600},
+            {
+                "id": "vid001",
+                "title": "History Video 1",
+                "channel": "Ch1",
+                "url": "https://youtube.com/watch?v=vid001",
+                "upload_date": "20250101",
+                "duration": 300,
+            },
+            {
+                "id": "vid002",
+                "title": "History Video 2",
+                "channel": "Ch2",
+                "url": "https://youtube.com/watch?v=vid002",
+                "upload_date": "20250102",
+                "duration": 600,
+            },
         ]
     }
+
 
 class TestYouTubeFeedToolNoCookies:
     @pytest.mark.asyncio
@@ -29,61 +48,37 @@ class TestYouTubeFeedToolNoCookies:
         assert result.success is False
         assert "cookies_file" in result.error["message"]
 
+    @pytest.mark.asyncio
+    async def test_invalid_feed_type_returns_error(self, tool_with_cookies):
+        result = await tool_with_cookies.execute({"feed_type": "trending"})
+        assert result.success is False
+        assert "Invalid feed_type" in result.error["message"]
+
+
 class TestYouTubeFeedToolFeedTypes:
     @pytest.mark.asyncio
-    async def test_history_uses_correct_target(self, tool_with_cookies, mock_feed_results):
+    @pytest.mark.parametrize(
+        "feed_type,expected_target",
+        [
+            ("history", ":ythistory"),
+            ("subscriptions", ":ytsubs"),
+            ("liked", ":ytfav"),
+            ("recommendations", ":ytrec"),
+            ("watch_later", ":ytwatchlater"),
+        ],
+    )
+    async def test_feed_type_uses_correct_target(
+        self, tool_with_cookies, mock_feed_results, feed_type, expected_target
+    ):
         with patch("amplifier_youtube.feed_tool.yt_dlp.YoutubeDL") as mock_ydl_cls:
             mock_ydl = MagicMock()
             mock_ydl.extract_info.return_value = mock_feed_results
-            mock_ydl_cls.return_value.__enter__ = MagicMock(return_value=mock_ydl)
-            mock_ydl_cls.return_value.__exit__ = MagicMock(return_value=False)
-            await tool_with_cookies.execute({"feed_type": "history"})
+            mock_ydl_cls.return_value.__enter__.return_value = mock_ydl
+            mock_ydl_cls.return_value.__exit__.return_value = False
+            await tool_with_cookies.execute({"feed_type": feed_type})
             call_arg = mock_ydl.extract_info.call_args[0][0]
-        assert call_arg == ":ythistory"
+        assert call_arg == expected_target
 
-    @pytest.mark.asyncio
-    async def test_subscriptions_uses_correct_target(self, tool_with_cookies, mock_feed_results):
-        with patch("amplifier_youtube.feed_tool.yt_dlp.YoutubeDL") as mock_ydl_cls:
-            mock_ydl = MagicMock()
-            mock_ydl.extract_info.return_value = mock_feed_results
-            mock_ydl_cls.return_value.__enter__ = MagicMock(return_value=mock_ydl)
-            mock_ydl_cls.return_value.__exit__ = MagicMock(return_value=False)
-            await tool_with_cookies.execute({"feed_type": "subscriptions"})
-            call_arg = mock_ydl.extract_info.call_args[0][0]
-        assert call_arg == ":ytsubs"
-
-    @pytest.mark.asyncio
-    async def test_liked_uses_correct_target(self, tool_with_cookies, mock_feed_results):
-        with patch("amplifier_youtube.feed_tool.yt_dlp.YoutubeDL") as mock_ydl_cls:
-            mock_ydl = MagicMock()
-            mock_ydl.extract_info.return_value = mock_feed_results
-            mock_ydl_cls.return_value.__enter__ = MagicMock(return_value=mock_ydl)
-            mock_ydl_cls.return_value.__exit__ = MagicMock(return_value=False)
-            await tool_with_cookies.execute({"feed_type": "liked"})
-            call_arg = mock_ydl.extract_info.call_args[0][0]
-        assert call_arg == ":ytfav"
-
-    @pytest.mark.asyncio
-    async def test_recommendations_uses_correct_target(self, tool_with_cookies, mock_feed_results):
-        with patch("amplifier_youtube.feed_tool.yt_dlp.YoutubeDL") as mock_ydl_cls:
-            mock_ydl = MagicMock()
-            mock_ydl.extract_info.return_value = mock_feed_results
-            mock_ydl_cls.return_value.__enter__ = MagicMock(return_value=mock_ydl)
-            mock_ydl_cls.return_value.__exit__ = MagicMock(return_value=False)
-            await tool_with_cookies.execute({"feed_type": "recommendations"})
-            call_arg = mock_ydl.extract_info.call_args[0][0]
-        assert call_arg == ":ytrec"
-
-    @pytest.mark.asyncio
-    async def test_watch_later_uses_correct_target(self, tool_with_cookies, mock_feed_results):
-        with patch("amplifier_youtube.feed_tool.yt_dlp.YoutubeDL") as mock_ydl_cls:
-            mock_ydl = MagicMock()
-            mock_ydl.extract_info.return_value = mock_feed_results
-            mock_ydl_cls.return_value.__enter__ = MagicMock(return_value=mock_ydl)
-            mock_ydl_cls.return_value.__exit__ = MagicMock(return_value=False)
-            await tool_with_cookies.execute({"feed_type": "watch_later"})
-            call_arg = mock_ydl.extract_info.call_args[0][0]
-        assert call_arg == ":ytwatchlater"
 
 class TestYouTubeFeedToolResults:
     @pytest.mark.asyncio
@@ -121,6 +116,7 @@ class TestYouTubeFeedToolResults:
             result = await tool_with_cookies.execute({"feed_type": "history"})
         assert result.success is False
         assert "hint" in result.error
+
 
 class TestYouTubeFeedToolSchema:
     def test_name(self):

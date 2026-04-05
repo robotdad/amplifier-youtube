@@ -70,51 +70,51 @@ class YouTubeSearchTool:
             "required": ["query"],
         }
 
-    async def execute(self, input: dict[str, Any]) -> ToolResult:
-        query = input.get("query")
+    async def execute(self, params: dict[str, Any]) -> ToolResult:
+        query = params.get("query")
         if not query:
             return ToolResult(success=False, error={"message": "Missing required parameter: query"})
 
-        max_results = input.get("max_results", self.default_max_results)
+        max_results = params.get("max_results", self.default_max_results)
 
         if self.api_key:
             try:
-                return await self._search_with_api(input, max_results)
+                return await self._search_with_api(params, max_results)
             except Exception as e:
                 logger.warning(f"YouTube Data API failed ({e}), falling back to yt-dlp")
 
         try:
-            return await self._search_with_ytdlp(input, max_results)
+            return await self._search_with_ytdlp(params, max_results)
         except Exception as e:
             logger.error(f"yt-dlp search failed: {e}", exc_info=True)
             return ToolResult(success=False, error={"message": str(e), "type": type(e).__name__})
 
-    async def _search_with_api(self, input: dict[str, Any], max_results: int) -> ToolResult:
+    async def _search_with_api(self, params: dict[str, Any], max_results: int) -> ToolResult:
         youtube = build("youtube", "v3", developerKey=self.api_key)
 
-        params: dict[str, Any] = {
-            "q": input["query"],
+        api_params: dict[str, Any] = {
+            "q": params["query"],
             "part": "snippet",
             "type": "video",
             "maxResults": min(max_results, 50),
             "safeSearch": "moderate" if self.safe_search else "none",
         }
 
-        order = input.get("order", "relevance")
+        order = params.get("order", "relevance")
         if order in ("relevance", "date", "viewCount", "rating"):
-            params["order"] = order
-        if input.get("duration") and input["duration"] != "any":
-            params["videoDuration"] = input["duration"]
-        if input.get("published_after"):
-            params["publishedAfter"] = input["published_after"]
-        if input.get("published_before"):
-            params["publishedBefore"] = input["published_before"]
-        if input.get("region_code"):
-            params["regionCode"] = input["region_code"]
-        if input.get("hd_only"):
-            params["videoDefinition"] = "high"
+            api_params["order"] = order
+        if params.get("duration") and params["duration"] != "any":
+            api_params["videoDuration"] = params["duration"]
+        if params.get("published_after"):
+            api_params["publishedAfter"] = params["published_after"]
+        if params.get("published_before"):
+            api_params["publishedBefore"] = params["published_before"]
+        if params.get("region_code"):
+            api_params["regionCode"] = params["region_code"]
+        if params.get("hd_only"):
+            api_params["videoDefinition"] = "high"
 
-        response = youtube.search().list(**params).execute()
+        response = youtube.search().list(**api_params).execute()
 
         results = []
         for item in response.get("items", []):
@@ -134,10 +134,10 @@ class YouTubeSearchTool:
 
         return ToolResult(success=True, output={"results": results, "backend": "api", "total_results": len(results)})
 
-    async def _search_with_ytdlp(self, input: dict[str, Any], max_results: int) -> ToolResult:
-        order = input.get("order", "relevance")
+    async def _search_with_ytdlp(self, params: dict[str, Any], max_results: int) -> ToolResult:
+        order = params.get("order", "relevance")
         prefix = "ytsearchdate" if order == "date" else "ytsearch"
-        search_query = f"{prefix}{max_results}:{input['query']}"
+        search_query = f"{prefix}{max_results}:{params['query']}"
 
         ydl_opts = {"quiet": True, "extract_flat": True, "no_warnings": True}
 
