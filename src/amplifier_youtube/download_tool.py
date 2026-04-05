@@ -87,8 +87,11 @@ class YouTubeDownloadTool:
 
             screenshot_path = None
             if capture_screenshot:
-                assert isinstance(screenshot_time, str)
-                screenshot_filename = output_filename.replace(".mp4", ".jpg") if output_filename else "screenshot.jpg"
+                if not isinstance(screenshot_time, str):
+                    return ToolResult(success=False, error={"message": "screenshot_time must be a string in HH:MM:SS format"})
+                screenshot_filename = (
+                    Path(output_filename).with_suffix(".jpg").name if output_filename else "screenshot.jpg"
+                )
                 screenshot_output = self.output_dir / screenshot_filename
                 logger.info(f"Capturing screenshot at {screenshot_time}")
                 screenshot_path = self.loader.capture_screenshot(downloaded_path, screenshot_time, screenshot_output)

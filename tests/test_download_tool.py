@@ -90,10 +90,12 @@ class TestYouTubeDownloadToolAudioDownload:
             ) as mock_download:
                 await youtube_tool.execute({"url": "https://youtube.com/watch?v=test", "output_filename": "custom.mp3"})
 
-                mock_download.assert_called_once()
-                # Check positional args: (url, output_dir, filename, use_cache)
-                call_args = mock_download.call_args[0]
-                assert call_args[2] == "custom.mp3"  # filename is 3rd positional arg
+                mock_download.assert_called_once_with(
+                    "https://youtube.com/watch?v=test",
+                    youtube_tool.output_dir,
+                    "custom.mp3",
+                    True,
+                )
 
     @pytest.mark.asyncio
     async def test_audio_download_with_cache(self, youtube_tool, mock_video_info):
@@ -104,9 +106,12 @@ class TestYouTubeDownloadToolAudioDownload:
             ) as mock_download:
                 await youtube_tool.execute({"url": "https://youtube.com/watch?v=test", "use_cache": False})
 
-                # Check positional args: (url, output_dir, filename, use_cache)
-                call_args = mock_download.call_args[0]
-                assert call_args[3] is False  # use_cache is 4th positional arg
+                mock_download.assert_called_once_with(
+                    "https://youtube.com/watch?v=test",
+                    youtube_tool.output_dir,
+                    "audio.mp3",
+                    False,
+                )
 
 
 class TestYouTubeDownloadToolVideoDownload:
