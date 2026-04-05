@@ -7,6 +7,10 @@ Verifies that the new package:
 - Maintains backward compatibility in the old amplifier_module_tool_youtube_dl package
 """
 
+import importlib.util
+
+import pytest
+
 
 class TestAmplifierYoutubePackageImports:
     """Test that amplifier_youtube package exports the correct shared symbols."""
@@ -69,6 +73,10 @@ class TestAmplifierYoutubePackageImports:
         assert not hasattr(amplifier_youtube, "mount"), "mount() should not be in amplifier_youtube until Task 3+"
 
 
+_amplifier_core_available = importlib.util.find_spec("amplifier_core") is not None
+
+
+@pytest.mark.skipif(not _amplifier_core_available, reason="amplifier_core not installed (requires uv sync with network)")
 class TestBackwardCompatibility:
     """Ensure the old amplifier_module_tool_youtube_dl package still works."""
 
