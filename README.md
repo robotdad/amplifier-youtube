@@ -1,21 +1,31 @@
-# Amplifier YouTube-DL Tool Module
+# Amplifier YouTube Module
 
-Download audio and video from YouTube with metadata extraction.
+YouTube capability module for Amplifier — download audio/video, search with rich filters, and access account feeds.
 
-## Features
+## Tools
 
-- **YouTube audio/video download** - Extract audio or download full video
-- **Screenshot capture** - Capture frames at specific timestamps
-- **Metadata extraction** - Get title, duration, description, uploader
-- **Local file support** - Also handles local audio/video files
-- **Smart caching** - Avoid re-downloading the same content
-- **Format conversion** - Automatic conversion to MP3 or MP4
+### youtube-dl — Download
+- **YouTube audio/video download** — Extract audio or download full video
+- **Screenshot capture** — Capture frames at specific timestamps
+- **Metadata extraction** — Get title, duration, description, uploader
+- **Local file support** — Also handles local audio/video files
+- **Smart caching** — Avoid re-downloading the same content
+
+### youtube-search — Search
+- **Rich filters** — Duration, date range, region, HD (with API key)
+- **Dual backend** — YouTube Data API v3 with yt-dlp fallback
+- **Zero-config** — Works without API key using yt-dlp search
+
+### youtube-feed — Account Data
+- **Watch history, subscriptions, liked videos, recommendations, watch later**
+- **Cookie-based auth** — Uses browser cookies via yt-dlp
+- **Metadata only** — Returns URLs for piping to youtube-dl
 
 ## Prerequisites
 
 - **Python 3.11+**
-- **[UV](https://github.com/astral-sh/uv)** - Fast Python package manager
-- **ffmpeg** - Required for audio extraction and conversion
+- **[UV](https://github.com/astral-sh/uv)** — Fast Python package manager
+- **ffmpeg** — Required for audio extraction and conversion
 
 ### Installing UV
 
@@ -48,178 +58,106 @@ uv pip install -e .
 
 ## Usage
 
-### As an Amplifier Tool
-
-```python
-from amplifier_module_tool_youtube_dl import YouTubeDLTool
-
-# Create tool with config
-tool = YouTubeDLTool({
-    "output_dir": "~/downloads",
-    "audio_only": True  # Set False for video
-})
-
-# Download audio from YouTube
-result = await tool.execute({
-    "url": "https://youtube.com/watch?v=...",
-    "output_filename": "audio.mp3",  # Optional
-    "use_cache": True  # Optional (default: True)
-})
-
-# Download video
-result = await tool.execute({
-    "url": "https://youtube.com/watch?v=...",
-    "audio_only": False,  # Override config
-    "output_filename": "video.mp4"
-})
-
-# Capture screenshot at specific timestamp
-result = await tool.execute({
-    "url": "https://youtube.com/watch?v=...",
-    "capture_screenshot": True,
-    "screenshot_time": "00:05:30",  # HH:MM:SS format
-    "output_filename": "screenshot.jpg"
-})
-
-# Result includes:
-# - path: Path to downloaded file
-# - metadata: {title, id, duration, description, uploader}
-# - screenshot_path: Path to screenshot (if requested)
-```
-
 ### As an Amplifier Bundle (ad-hoc use)
 
-The simplest way to use this tool is via the companion bundle, which includes the
-tool registration and context instructions in one command:
-
 ```bash
-amplifier run --bundle git+https://github.com/microsoft/amplifier-module-tool-youtube-dl@main \
+amplifier run --bundle git+https://github.com/microsoft/amplifier-youtube@main \
   "Download audio from https://youtube.com/watch?v=..."
 ```
 
 ### Adding to Your Own Bundle
 
-Include the `youtube-dl` behavior in your own bundle to add download capability:
+Include the `youtube` behavior in your bundle to add all three tools:
 
 ```yaml
 includes:
-  - bundle: git+https://github.com/microsoft/amplifier-module-tool-youtube-dl@main#behaviors/youtube-dl.yaml
+  - bundle: git+https://github.com/microsoft/amplifier-youtube@main#behaviors/youtube.yaml
 ```
 
-### In an Amplifier Profile (legacy)
+### Programmatic Use
 
-You can also register the module directly in a profile:
+```python
+from amplifier_youtube import YouTubeDownloadTool, YouTubeSearchTool, YouTubeFeedTool
+
+# Download audio from YouTube
+dl_tool = YouTubeDownloadTool({"output_dir": "~/downloads", "audio_only": True})
+result = await dl_tool.execute({
+    "url": "https://youtube.com/watch?v=...",
+    "output_filename": "audio.mp3",
+})
+
+# Search YouTube
+search_tool = YouTubeSearchTool({"api_key": "AIza..."})  # api_key optional
+result = await search_tool.execute({
+    "query": "python tutorial",
+    "max_results": 5,
+    "order": "relevance",
+})
+
+# Access account feed (requires cookies)
+feed_tool = YouTubeFeedTool({}, cookies_file="~/yt-cookies.txt")
+result = await feed_tool.execute({
+    "feed_type": "history",
+    "limit": 20,
+})
+```
+
+### In a Mount Plan
 
 ```yaml
----
-profile:
-  name: youtube-downloader
-  extends: base
-
 tools:
-  - module: tool-youtube-dl
-    source: git+https://github.com/microsoft/amplifier-module-tool-youtube-dl@main
+  - module: youtube
+    source: git+https://github.com/microsoft/amplifier-youtube@main
     config:
       output_dir: ~/downloads
       audio_only: true
----
-
-# YouTube Downloader Profile
-
-Enables YouTube content downloading in amplifier sessions.
-```
-
-Then use in conversation:
-
-```bash
-amplifier run --profile youtube-downloader
-> "Download audio from https://youtube.com/watch?v=..."
-```
-
-### Local File Handling
-
-The tool also extracts metadata from local audio/video files:
-
-```python
-result = await tool.execute({
-    "url": "/path/to/local-video.mp4"
-})
-
-# Extracts: duration, format info, etc.
+      cookies_file: ~/yt-cookies.txt    # optional — for feed access
+      search:
+        api_key: AIza...                 # optional — enables rich filters
+        max_results: 10
+        safe_search: true
 ```
 
 ## Configuration
 
-Tool configuration options:
+### Top-Level Config
 
-- `output_dir`: Where to save downloads (default: `~/downloads`)
-- `audio_only`: Extract audio only vs. full video (default: `True`)
-- `cookies_file`: Path to a Netscape-format cookies file for yt-dlp (optional, useful for age-restricted or authenticated content)
+| Key | Used By | Default | Description |
+|-----|---------|---------|-------------|
+| `output_dir` | youtube-dl | `~/downloads` | Where to save downloads |
+| `audio_only` | youtube-dl | `true` | Extract audio only by default |
+| `cookies_file` | youtube-dl, youtube-feed | — | Path to Netscape-format cookies file |
 
-### Execution Parameters
+### Search Config (`search:` sub-key)
 
-Per-request options:
+| Key | Default | Description |
+|-----|---------|-------------|
+| `api_key` | — | YouTube Data API v3 key (enables rich filters) |
+| `max_results` | `10` | Default results per search |
+| `safe_search` | `true` | Enable safe search filtering |
 
-- `url`: YouTube URL or local file path (required)
-- `audio_only`: Override config setting for this request
-- `output_filename`: Custom filename (optional)
-- `use_cache`: Use cached file if exists (default: `True`)
-- `capture_screenshot`: Extract screenshot (default: `False`)
-- `screenshot_time`: Timestamp for screenshot in HH:MM:SS format (required if capture_screenshot is True)
+### Cookies Setup (for youtube-feed)
 
-## Caching
+Export your browser cookies to a Netscape-format file (use a browser extension like
+"Get cookies.txt LOCALLY") and set `cookies_file` in your config. Cookies may expire —
+re-export if you see authentication errors.
 
-The tool caches downloaded files by default. If the output file already exists:
-- Uses cached version (fast)
-- Skips re-download
-- Override with `use_cache: False` in execute params
+## Migration from v0.1.0 (amplifier-module-tool-youtube-dl)
 
-## Supported Platforms
+This is a **breaking change**. Update your configs:
 
-Currently supports:
-- **YouTube** - Videos, playlists (individual videos)
-- **Local files** - MP4, MP3, WAV, M4A, etc.
-
-## Event Emission
-
-Emits standard amplifier events:
-
-- `tool:pre` - Before download starts
-- `tool:post` - After successful download
-- `tool:error` - On download failure
+1. `module: tool-youtube-dl` → `module: youtube`
+2. Update source URLs: `amplifier-module-tool-youtube-dl` → `amplifier-youtube`
+3. `cookies_file` is now at the top level of module config (shared across tools)
 
 ## Dependencies
 
-- `yt-dlp>=2024.0.0` - YouTube download engine (Python, installed automatically)
-- **ffmpeg** (external) - Audio extraction and conversion (must be installed separately)
+- `yt-dlp>=2024.0.0` — YouTube download and search engine
+- `google-api-python-client>=2.0.0` — YouTube Data API v3 (rich search filters)
+- **ffmpeg** (external) — Audio extraction and conversion
 
 > **Note:** `amplifier-core` is a peer dependency provided by the Amplifier runtime — it is not
 > listed as a Python package dependency of this module.
-
-## Troubleshooting
-
-### "yt-dlp is not installed"
-
-Install with UV:
-```bash
-uv add yt-dlp
-```
-
-### "ffmpeg not found"
-
-Install ffmpeg for your platform (see Prerequisites section).
-
-### "Failed to download URL"
-
-Common causes:
-- Video is private or deleted
-- Age-restricted content
-- Geographic restrictions
-- Rate limiting (try again later)
-
-### "Could not find downloaded audio file"
-
-Ensure ffmpeg is installed. The tool requires ffmpeg for audio extraction.
 
 ## Contributing
 

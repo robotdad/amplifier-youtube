@@ -1,13 +1,13 @@
 ---
 bundle:
-  name: youtube-dl
-  version: 1.0.0
-  description: YouTube download assistant — audio, video, and screenshot extraction
+  name: youtube
+  version: 2.0.0
+  description: YouTube assistant — download audio/video, search with rich filters, and access account feeds
 
 includes:
-  - bundle: youtube-dl:behaviors/youtube-dl
+  - bundle: youtube:behaviors/youtube
 ---
 
-# YouTube Download Assistant
+# YouTube Assistant
 
-@youtube-dl:context/instructions.md
+@youtube:context/instructions.md
