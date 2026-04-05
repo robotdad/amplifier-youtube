@@ -3,11 +3,11 @@ Tests for YouTubeDLTool implementation.
 """
 
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from amplifier_module_tool_youtube_dl import VideoInfo, YouTubeDLTool
+from amplifier_module_tool_youtube_dl import VideoInfo, YouTubeDLTool, mount
 
 
 @pytest.fixture
@@ -232,6 +232,55 @@ class TestYouTubeDLToolErrorHandling:
             assert result.success is False
             assert "Unexpected error" in result.error["message"]
             assert result.error["type"] == "RuntimeError"
+
+
+class TestMount:
+    """Test module mount() entry point."""
+
+    @pytest.mark.asyncio
+    async def test_mount_registers_tool(self):
+        """Test that mount() registers the tool with the coordinator."""
+        coordinator = MagicMock()
+        coordinator.mount = AsyncMock()
+
+        result = await mount(coordinator)
+
+        # Verify coordinator.mount was called with the tool
+        coordinator.mount.assert_called_once()
+        call_args = coordinator.mount.call_args
+        assert call_args[0][0] == "tools"  # first positional arg is "tools"
+
+        # Verify the manifest returned
+        assert result is not None
+        assert result["name"] == "tool-youtube-dl"
+        assert "youtube-dl" in result["provides"]
+
+    @pytest.mark.asyncio
+    async def test_mount_with_config(self):
+        """Test that mount() passes config to YouTubeDLTool."""
+        coordinator = MagicMock()
+        coordinator.mount = AsyncMock()
+
+        config = {"output_dir": "/tmp/test", "audio_only": False}
+        result = await mount(coordinator, config)
+
+        assert result is not None
+        # Retrieve the tool instance that was passed to coordinator.mount
+        tool = coordinator.mount.call_args[0][1]
+        assert tool.output_dir.as_posix() == "/tmp/test"
+        assert tool.audio_only is False
+
+    @pytest.mark.asyncio
+    async def test_mount_without_config_uses_defaults(self):
+        """Test that mount() works with no config (uses defaults)."""
+        coordinator = MagicMock()
+        coordinator.mount = AsyncMock()
+
+        result = await mount(coordinator, None)
+
+        assert result is not None
+        tool = coordinator.mount.call_args[0][1]
+        assert tool.audio_only is True  # default
 
 
 class TestYouTubeDLToolMetadata:

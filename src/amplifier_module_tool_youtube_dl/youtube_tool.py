@@ -46,6 +46,40 @@ class YouTubeDLTool:
         """Human-readable tool description."""
         return "Download audio or video from YouTube with metadata extraction and screenshot capture"
 
+    @property
+    def input_schema(self) -> dict:
+        """JSON Schema for tool input validation."""
+        return {
+            "type": "object",
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "description": "YouTube URL or local file path to process",
+                },
+                "audio_only": {
+                    "type": "boolean",
+                    "description": "Download audio only (True) vs full video (False). Overrides config setting.",
+                },
+                "output_filename": {
+                    "type": "string",
+                    "description": "Custom output filename (optional)",
+                },
+                "use_cache": {
+                    "type": "boolean",
+                    "description": "Use cached file if exists (default: True)",
+                },
+                "capture_screenshot": {
+                    "type": "boolean",
+                    "description": "Extract a screenshot from the video (default: False)",
+                },
+                "screenshot_time": {
+                    "type": "string",
+                    "description": "Timestamp for screenshot in HH:MM:SS format (required if capture_screenshot is True)",
+                },
+            },
+            "required": ["url"],
+        }
+
     async def execute(self, input: dict[str, Any]) -> ToolResult:
         """Execute YouTube download.
 
@@ -109,6 +143,8 @@ class YouTubeDLTool:
             # Capture screenshot if requested
             screenshot_path = None
             if capture_screenshot:
+                # screenshot_time is guaranteed to be a str here — validated above
+                assert isinstance(screenshot_time, str)
                 screenshot_filename = output_filename.replace(".mp4", ".jpg") if output_filename else "screenshot.jpg"
                 screenshot_output = self.output_dir / screenshot_filename
 

@@ -87,9 +87,28 @@ result = await tool.execute({
 # - screenshot_path: Path to screenshot (if requested)
 ```
 
-### In an Amplifier Profile
+### As an Amplifier Bundle (ad-hoc use)
 
-Create `~/.amplifier/profiles/youtube.md`:
+The simplest way to use this tool is via the companion bundle, which includes the
+tool registration and context instructions in one command:
+
+```bash
+amplifier run --bundle git+https://github.com/microsoft/amplifier-module-tool-youtube-dl@main \
+  "Download audio from https://youtube.com/watch?v=..."
+```
+
+### Adding to Your Own Bundle
+
+Include the `youtube-dl` behavior in your own bundle to add download capability:
+
+```yaml
+includes:
+  - bundle: git+https://github.com/microsoft/amplifier-module-tool-youtube-dl@main#behaviors/youtube-dl.yaml
+```
+
+### In an Amplifier Profile (legacy)
+
+You can also register the module directly in a profile:
 
 ```yaml
 ---
@@ -99,7 +118,7 @@ profile:
 
 tools:
   - module: tool-youtube-dl
-    source: git+https://github.com/robotdad/amplifier-module-tool-youtube-dl@main
+    source: git+https://github.com/microsoft/amplifier-module-tool-youtube-dl@main
     config:
       output_dir: ~/downloads
       audio_only: true
@@ -135,6 +154,7 @@ Tool configuration options:
 
 - `output_dir`: Where to save downloads (default: `~/downloads`)
 - `audio_only`: Extract audio only vs. full video (default: `True`)
+- `cookies_file`: Path to a Netscape-format cookies file for yt-dlp (optional, useful for age-restricted or authenticated content)
 
 ### Execution Parameters
 
@@ -170,9 +190,11 @@ Emits standard amplifier events:
 
 ## Dependencies
 
-- `yt-dlp>=2024.0.0` - YouTube download engine
-- `amplifier-core` - Core amplifier functionality
-- **ffmpeg** (external) - Audio extraction and conversion
+- `yt-dlp>=2024.0.0` - YouTube download engine (Python, installed automatically)
+- **ffmpeg** (external) - Audio extraction and conversion (must be installed separately)
+
+> **Note:** `amplifier-core` is a peer dependency provided by the Amplifier runtime — it is not
+> listed as a Python package dependency of this module.
 
 ## Troubleshooting
 
