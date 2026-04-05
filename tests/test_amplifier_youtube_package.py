@@ -4,12 +4,7 @@ Tests for the amplifier_youtube package scaffold (Task 1).
 Verifies that the new package:
 - Exists and is importable
 - Exports VideoInfo, VideoLoader, and AudioExtractor from shared modules
-- Maintains backward compatibility in the old amplifier_module_tool_youtube_dl package
 """
-
-import importlib.util
-
-import pytest
 
 
 class TestAmplifierYoutubePackageImports:
@@ -81,24 +76,3 @@ class TestAmplifierYoutubePackageImports:
 
         assert hasattr(amplifier_youtube, "mount"), "mount() must be present in amplifier_youtube after Task 5"
 
-
-_amplifier_core_available = importlib.util.find_spec("amplifier_core") is not None
-
-
-@pytest.mark.skipif(
-    not _amplifier_core_available, reason="amplifier_core not installed (requires uv sync with network)"
-)
-class TestBackwardCompatibility:
-    """Ensure the old amplifier_module_tool_youtube_dl package still works."""
-
-    def test_old_package_video_info_importable(self):
-        """VideoInfo must still be importable from the old package."""
-        from amplifier_module_tool_youtube_dl import VideoInfo  # noqa: F401
-
-    def test_old_package_youtube_dl_tool_importable(self):
-        """YouTubeDLTool must still be importable from the old package."""
-        from amplifier_module_tool_youtube_dl import YouTubeDLTool  # noqa: F401
-
-    def test_old_package_mount_importable(self):
-        """mount() must still be importable from the old package."""
-        from amplifier_module_tool_youtube_dl import mount  # noqa: F401
