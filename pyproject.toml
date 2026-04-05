@@ -11,9 +11,8 @@ dependencies = [
     "google-api-python-client>=2.0.0",
 ]
 
-# Entry point added in Task 5 when mount() is implemented
-# [project.entry-points."amplifier.modules"]
-# "youtube" = "amplifier_youtube:mount"
+[project.entry-points."amplifier.modules"]
+"youtube" = "amplifier_youtube:mount"
 
 [build-system]
 requires = ["hatchling"]

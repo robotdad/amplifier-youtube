@@ -32,11 +32,19 @@ class TestAmplifierYoutubePackageImports:
         from amplifier_youtube import AudioExtractor  # noqa: F401
 
     def test_all_contains_expected_symbols(self):
-        """__all__ must declare exactly VideoInfo, VideoLoader, AudioExtractor, YouTubeDownloadTool."""
+        """__all__ must declare all public symbols including all three tools and mount()."""
         import amplifier_youtube
 
         assert hasattr(amplifier_youtube, "__all__")
-        assert set(amplifier_youtube.__all__) == {"VideoInfo", "VideoLoader", "AudioExtractor", "YouTubeDownloadTool", "YouTubeSearchTool"}
+        assert set(amplifier_youtube.__all__) == {
+            "VideoInfo",
+            "VideoLoader",
+            "AudioExtractor",
+            "YouTubeDownloadTool",
+            "YouTubeSearchTool",
+            "YouTubeFeedTool",
+            "mount",
+        }
 
     def test_video_info_is_dataclass(self):
         """VideoInfo exported from amplifier_youtube should be usable as a dataclass."""
@@ -66,17 +74,20 @@ class TestAmplifierYoutubePackageImports:
         extractor = AudioExtractor(temp_dir=tmp_path)
         assert extractor is not None
 
-    def test_mount_is_not_exported(self):
-        """mount() is added in a later task — must NOT be in amplifier_youtube yet."""
+    def test_mount_is_exported(self):
+        """mount() must be exported from amplifier_youtube as of Task 5."""
         import amplifier_youtube
+        from amplifier_youtube import mount  # noqa: F401
 
-        assert not hasattr(amplifier_youtube, "mount"), "mount() should not be in amplifier_youtube until Task 3+"
+        assert hasattr(amplifier_youtube, "mount"), "mount() must be present in amplifier_youtube after Task 5"
 
 
 _amplifier_core_available = importlib.util.find_spec("amplifier_core") is not None
 
 
-@pytest.mark.skipif(not _amplifier_core_available, reason="amplifier_core not installed (requires uv sync with network)")
+@pytest.mark.skipif(
+    not _amplifier_core_available, reason="amplifier_core not installed (requires uv sync with network)"
+)
 class TestBackwardCompatibility:
     """Ensure the old amplifier_module_tool_youtube_dl package still works."""
 
