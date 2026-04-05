@@ -36,7 +36,7 @@ class TestAmplifierYoutubePackageImports:
         import amplifier_youtube
 
         assert hasattr(amplifier_youtube, "__all__")
-        assert set(amplifier_youtube.__all__) == {"VideoInfo", "VideoLoader", "AudioExtractor", "YouTubeDownloadTool"}
+        assert set(amplifier_youtube.__all__) == {"VideoInfo", "VideoLoader", "AudioExtractor", "YouTubeDownloadTool", "YouTubeSearchTool"}
 
     def test_video_info_is_dataclass(self):
         """VideoInfo exported from amplifier_youtube should be usable as a dataclass."""

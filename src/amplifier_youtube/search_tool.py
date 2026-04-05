@@ -83,7 +83,11 @@ class YouTubeSearchTool:
             except Exception as e:
                 logger.warning(f"YouTube Data API failed ({e}), falling back to yt-dlp")
 
-        return await self._search_with_ytdlp(input, max_results)
+        try:
+            return await self._search_with_ytdlp(input, max_results)
+        except Exception as e:
+            logger.error(f"yt-dlp search failed: {e}", exc_info=True)
+            return ToolResult(success=False, error={"message": str(e), "type": type(e).__name__})
 
     async def _search_with_api(self, input: dict[str, Any], max_results: int) -> ToolResult:
         youtube = build("youtube", "v3", developerKey=self.api_key)

@@ -76,6 +76,17 @@ class TestYouTubeSearchToolNoApiKey:
         assert result.success is False
         assert "query" in result.error["message"]
 
+    @pytest.mark.asyncio
+    async def test_ytdlp_failure_returns_error_result(self, tool_no_key):
+        with patch("amplifier_youtube.search_tool.yt_dlp.YoutubeDL") as mock_cls:
+            mock_ydl = MagicMock()
+            mock_ydl.extract_info.side_effect = Exception("network error")
+            mock_cls.return_value.__enter__ = MagicMock(return_value=mock_ydl)
+            mock_cls.return_value.__exit__ = MagicMock(return_value=False)
+            result = await tool_no_key.execute({"query": "python tutorial"})
+        assert result.success is False
+        assert "network error" in result.error["message"]
+
 
 class TestYouTubeSearchToolWithApiKey:
     @pytest.mark.asyncio
