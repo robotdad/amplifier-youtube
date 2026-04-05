@@ -1,0 +1,19 @@
+bundle:
+  name: youtube-behavior
+  version: 2.0.0
+  description: Adds YouTube download, search, and account feed capabilities to any Amplifier session
+
+tools:
+  - module: youtube
+    source: git+https://github.com/microsoft/amplifier-youtube@main
+    config:
+      output_dir: ~/downloads
+      audio_only: true
+      # cookies_file: ~/yt-cookies.txt  # uncomment for account feed access
+      search:
+        # api_key: AIza...  # uncomment for rich search filters
+        max_results: 10
+
+context:
+  include:
+    - youtube:context/instructions.md

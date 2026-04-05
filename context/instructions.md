@@ -1,34 +1,46 @@
-# YouTube Download Tool
+# YouTube Tools
 
-You have access to the `youtube-dl` tool for downloading audio, video, and screenshots
-from YouTube URLs, or processing local video files.
+You have access to three YouTube tools.
 
-## Capabilities
+## youtube-dl — Download
 
-- **Audio download**: Extract MP3 audio from any YouTube URL
-- **Video download**: Download full MP4 video
-- **Screenshot capture**: Extract a still frame at a specific timestamp
-- **Local file processing**: Accept local file paths in addition to URLs
+Download audio or video from YouTube URLs or local video files.
 
-## Tool Parameters
-
+**Parameters:**
 - `url` (required): YouTube URL or local file path
 - `audio_only` (optional): `true` for MP3 audio (default), `false` for MP4 video
-- `output_filename` (optional): Custom filename for the output
+- `output_filename` (optional): Custom output filename
 - `use_cache` (optional): Skip re-download if file exists (default: `true`)
 - `capture_screenshot` (optional): Extract a still frame (default: `false`)
-- `screenshot_time` (optional): Timestamp in `HH:MM:SS` format (required when `capture_screenshot: true`)
+- `screenshot_time` (optional): Timestamp `HH:MM:SS` — required when `capture_screenshot: true`
 
-## Usage Guidelines
+## youtube-search — Search
 
-- Default behavior is audio-only (MP3). Explicitly set `audio_only: false` for video.
-- Screenshots require both `capture_screenshot: true` AND a `screenshot_time` value.
-- Output goes to `~/downloads` by default (configurable via bundle config).
-- The tool caches downloads — subsequent requests for the same URL return the cached file
-  unless `use_cache: false` is specified.
-- For local files, just pass the file path as `url` — the tool detects this automatically.
+Search YouTube for videos. Returns a list of results with URLs that can be passed to `youtube-dl`.
 
-## System Requirements
+**Parameters:**
+- `query` (required): Search terms
+- `max_results` (optional): Number of results, default 10, max 50
+- `order` (optional): `relevance` (default) | `date` | `viewCount` | `rating`
+- `duration` (optional): `any` | `short` (<4 min) | `medium` (4–20 min) | `long` (>20 min) — *API key required*
+- `published_after` / `published_before` (optional): ISO 8601 date range — *API key required*
+- `region_code` (optional): ISO 3166-1 alpha-2 country code — *API key required*
+- `hd_only` (optional): Filter for HD content — *API key required*
 
-- **ffmpeg** must be installed for audio extraction and video processing
-- **yt-dlp** handles YouTube downloading (installed automatically as a Python dependency)
+The response includes a `backend` field (`"api"` or `"ytdlp"`) indicating which search engine was used.
+Filters marked *API key required* are silently ignored when no API key is configured.
+
+## youtube-feed — Account Data
+
+Access your YouTube account feeds. **Requires `cookies_file` to be configured.**
+
+**Parameters:**
+- `feed_type` (required): `history` | `subscriptions` | `liked` | `recommendations` | `watch_later`
+- `limit` (optional): Max items to return (default: 50)
+
+Returns metadata only (id, title, channel, url, upload_date, duration_seconds).
+Pass `url` values to `youtube-dl` to download items.
+
+**Cookies setup:** Export your browser cookies to a Netscape-format file (use a browser extension
+like "Get cookies.txt LOCALLY") and set `cookies_file: ~/path/to/cookies.txt` in your bundle config.
+Cookies may expire — re-export if you see authentication errors.

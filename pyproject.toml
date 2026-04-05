@@ -1,19 +1,18 @@
 [project]
-name = "amplifier-module-tool-youtube-dl"
-version = "0.1.0"
-description = "YouTube download tool with audio, video, and screenshot support for Amplifier"
+name = "amplifier-youtube"
+version = "0.2.0"
+description = "YouTube capability module for Amplifier — download, search, and account feed access"
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
-authors = [
-    { name = "Microsoft Corporation" }
-]
+authors = [{ name = "Microsoft Corporation" }]
 dependencies = [
     "yt-dlp>=2024.0.0",
+    "google-api-python-client>=2.0.0",
 ]
 
 [project.entry-points."amplifier.modules"]
-"tool-youtube-dl" = "amplifier_module_tool_youtube_dl:mount"
+"youtube" = "amplifier_youtube:mount"
 
 [build-system]
 requires = ["hatchling"]
@@ -23,7 +22,7 @@ build-backend = "hatchling.build"
 package = true
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/amplifier_module_tool_youtube_dl"]
+packages = ["src/amplifier_youtube"]
 
 [tool.hatch.metadata]
 allow-direct-references = true

@@ -1,13 +1,14 @@
 """
-Tests for YouTubeDLTool implementation.
+Tests for YouTubeDownloadTool implementation.
 """
 
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
-from amplifier_module_tool_youtube_dl import VideoInfo, YouTubeDLTool, mount
+from amplifier_youtube import VideoInfo
+from amplifier_youtube.download_tool import YouTubeDownloadTool
 
 
 @pytest.fixture
@@ -21,8 +22,8 @@ def tool_config():
 
 @pytest.fixture
 def youtube_tool(tool_config):
-    """Create YouTubeDLTool instance."""
-    return YouTubeDLTool(tool_config)
+    """Create YouTubeDownloadTool instance."""
+    return YouTubeDownloadTool(tool_config)
 
 
 @pytest.fixture
@@ -39,18 +40,18 @@ def mock_video_info():
     )
 
 
-class TestYouTubeDLToolInitialization:
+class TestYouTubeDownloadToolInitialization:
     """Test tool initialization."""
 
     def test_init_default_config(self):
         """Test initialization with default configuration."""
-        tool = YouTubeDLTool({})
+        tool = YouTubeDownloadTool({})
         assert tool.output_dir == Path.home() / "downloads"
         assert tool.audio_only is True
 
     def test_init_custom_config(self, tool_config):
         """Test initialization with custom configuration."""
-        tool = YouTubeDLTool(tool_config)
+        tool = YouTubeDownloadTool(tool_config)
         assert tool.output_dir == Path("/tmp/test_downloads")
         assert tool.audio_only is True
 
@@ -64,7 +65,7 @@ class TestYouTubeDLToolInitialization:
         assert "YouTube" in youtube_tool.description
 
 
-class TestYouTubeDLToolAudioDownload:
+class TestYouTubeDownloadToolAudioDownload:
     """Test audio download functionality."""
 
     @pytest.mark.asyncio
@@ -89,10 +90,12 @@ class TestYouTubeDLToolAudioDownload:
             ) as mock_download:
                 await youtube_tool.execute({"url": "https://youtube.com/watch?v=test", "output_filename": "custom.mp3"})
 
-                mock_download.assert_called_once()
-                # Check positional args: (url, output_dir, filename, use_cache)
-                call_args = mock_download.call_args[0]
-                assert call_args[2] == "custom.mp3"  # filename is 3rd positional arg
+                mock_download.assert_called_once_with(
+                    "https://youtube.com/watch?v=test",
+                    youtube_tool.output_dir,
+                    "custom.mp3",
+                    True,
+                )
 
     @pytest.mark.asyncio
     async def test_audio_download_with_cache(self, youtube_tool, mock_video_info):
@@ -103,12 +106,15 @@ class TestYouTubeDLToolAudioDownload:
             ) as mock_download:
                 await youtube_tool.execute({"url": "https://youtube.com/watch?v=test", "use_cache": False})
 
-                # Check positional args: (url, output_dir, filename, use_cache)
-                call_args = mock_download.call_args[0]
-                assert call_args[3] is False  # use_cache is 4th positional arg
+                mock_download.assert_called_once_with(
+                    "https://youtube.com/watch?v=test",
+                    youtube_tool.output_dir,
+                    "audio.mp3",
+                    False,
+                )
 
 
-class TestYouTubeDLToolVideoDownload:
+class TestYouTubeDownloadToolVideoDownload:
     """Test video download functionality."""
 
     @pytest.mark.asyncio
@@ -142,7 +148,7 @@ class TestYouTubeDLToolVideoDownload:
                     mock_audio.assert_not_called()
 
 
-class TestYouTubeDLToolScreenshotCapture:
+class TestYouTubeDownloadToolScreenshotCapture:
     """Test screenshot capture functionality."""
 
     @pytest.mark.asyncio
@@ -179,7 +185,7 @@ class TestYouTubeDLToolScreenshotCapture:
         assert "screenshot_time required" in result.error["message"]
 
 
-class TestYouTubeDLToolLocalFiles:
+class TestYouTubeDownloadToolLocalFiles:
     """Test local file handling."""
 
     @pytest.mark.asyncio
@@ -201,7 +207,7 @@ class TestYouTubeDLToolLocalFiles:
             assert result.output["metadata"]["type"] == "file"
 
 
-class TestYouTubeDLToolErrorHandling:
+class TestYouTubeDownloadToolErrorHandling:
     """Test error handling."""
 
     @pytest.mark.asyncio
@@ -234,56 +240,7 @@ class TestYouTubeDLToolErrorHandling:
             assert result.error["type"] == "RuntimeError"
 
 
-class TestMount:
-    """Test module mount() entry point."""
-
-    @pytest.mark.asyncio
-    async def test_mount_registers_tool(self):
-        """Test that mount() registers the tool with the coordinator."""
-        coordinator = MagicMock()
-        coordinator.mount = AsyncMock()
-
-        result = await mount(coordinator)
-
-        # Verify coordinator.mount was called with the tool
-        coordinator.mount.assert_called_once()
-        call_args = coordinator.mount.call_args
-        assert call_args[0][0] == "tools"  # first positional arg is "tools"
-
-        # Verify the manifest returned
-        assert result is not None
-        assert result["name"] == "tool-youtube-dl"
-        assert "youtube-dl" in result["provides"]
-
-    @pytest.mark.asyncio
-    async def test_mount_with_config(self):
-        """Test that mount() passes config to YouTubeDLTool."""
-        coordinator = MagicMock()
-        coordinator.mount = AsyncMock()
-
-        config = {"output_dir": "/tmp/test", "audio_only": False}
-        result = await mount(coordinator, config)
-
-        assert result is not None
-        # Retrieve the tool instance that was passed to coordinator.mount
-        tool = coordinator.mount.call_args[0][1]
-        assert tool.output_dir.as_posix() == "/tmp/test"
-        assert tool.audio_only is False
-
-    @pytest.mark.asyncio
-    async def test_mount_without_config_uses_defaults(self):
-        """Test that mount() works with no config (uses defaults)."""
-        coordinator = MagicMock()
-        coordinator.mount = AsyncMock()
-
-        result = await mount(coordinator, None)
-
-        assert result is not None
-        tool = coordinator.mount.call_args[0][1]
-        assert tool.audio_only is True  # default
-
-
-class TestYouTubeDLToolMetadata:
+class TestYouTubeDownloadToolMetadata:
     """Test metadata extraction."""
 
     @pytest.mark.asyncio
