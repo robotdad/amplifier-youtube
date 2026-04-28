@@ -8,6 +8,7 @@ from .core import VideoInfo, VideoLoader
 from .download_tool import YouTubeDownloadTool
 from .feed_tool import YouTubeFeedTool
 from .search_tool import YouTubeSearchTool
+from .transcript import TranscriptFetcher, TranscriptResult
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +19,8 @@ __all__ = [
     "VideoInfo",
     "VideoLoader",
     "AudioExtractor",
+    "TranscriptFetcher",
+    "TranscriptResult",
     "mount",
 ]
 

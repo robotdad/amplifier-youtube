@@ -33,6 +33,11 @@ class VideoInfo:
     uploader: str = ""
     audio_path: Path | None = None
     video_path: Path | None = None
+    transcript_text: str | None = None
+    transcript_path: Path | None = None
+    transcript_raw_path: Path | None = None
+    transcript_language: str | None = None
+    transcript_source: str | None = None
 
 
 class VideoLoader:
