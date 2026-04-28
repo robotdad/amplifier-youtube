@@ -7,8 +7,8 @@ from unittest.mock import patch
 
 import pytest
 
-from amplifier_youtube import VideoInfo
-from amplifier_youtube.download_tool import YouTubeDownloadTool
+from amplifier_module_tool_youtube import VideoInfo
+from amplifier_module_tool_youtube.download_tool import YouTubeDownloadTool
 
 
 @pytest.fixture

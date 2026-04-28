@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from amplifier_youtube.feed_tool import YouTubeFeedTool
+from amplifier_module_tool_youtube.feed_tool import YouTubeFeedTool
 
 
 @pytest.fixture
@@ -70,7 +70,7 @@ class TestYouTubeFeedToolFeedTypes:
     async def test_feed_type_uses_correct_target(
         self, tool_with_cookies, mock_feed_results, feed_type, expected_target
     ):
-        with patch("amplifier_youtube.feed_tool.yt_dlp.YoutubeDL") as mock_ydl_cls:
+        with patch("amplifier_module_tool_youtube.feed_tool.yt_dlp.YoutubeDL") as mock_ydl_cls:
             mock_ydl = MagicMock()
             mock_ydl.extract_info.return_value = mock_feed_results
             mock_ydl_cls.return_value.__enter__.return_value = mock_ydl
@@ -83,7 +83,7 @@ class TestYouTubeFeedToolFeedTypes:
 class TestYouTubeFeedToolResults:
     @pytest.mark.asyncio
     async def test_returns_correct_schema(self, tool_with_cookies, mock_feed_results):
-        with patch("amplifier_youtube.feed_tool.yt_dlp.YoutubeDL") as mock_ydl_cls:
+        with patch("amplifier_module_tool_youtube.feed_tool.yt_dlp.YoutubeDL") as mock_ydl_cls:
             mock_ydl = MagicMock()
             mock_ydl.extract_info.return_value = mock_feed_results
             mock_ydl_cls.return_value.__enter__ = MagicMock(return_value=mock_ydl)
@@ -97,7 +97,7 @@ class TestYouTubeFeedToolResults:
 
     @pytest.mark.asyncio
     async def test_limit_passed_as_playlistend(self, tool_with_cookies, mock_feed_results):
-        with patch("amplifier_youtube.feed_tool.yt_dlp.YoutubeDL") as mock_ydl_cls:
+        with patch("amplifier_module_tool_youtube.feed_tool.yt_dlp.YoutubeDL") as mock_ydl_cls:
             mock_ydl = MagicMock()
             mock_ydl.extract_info.return_value = mock_feed_results
             mock_ydl_cls.return_value.__enter__ = MagicMock(return_value=mock_ydl)
@@ -108,7 +108,7 @@ class TestYouTubeFeedToolResults:
 
     @pytest.mark.asyncio
     async def test_expired_cookies_returns_hint(self, tool_with_cookies):
-        with patch("amplifier_youtube.feed_tool.yt_dlp.YoutubeDL") as mock_ydl_cls:
+        with patch("amplifier_module_tool_youtube.feed_tool.yt_dlp.YoutubeDL") as mock_ydl_cls:
             mock_ydl = MagicMock()
             mock_ydl.extract_info.side_effect = Exception("Sign in to confirm your age")
             mock_ydl_cls.return_value.__enter__ = MagicMock(return_value=mock_ydl)

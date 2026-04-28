@@ -4,8 +4,8 @@ bundle:
   description: Adds YouTube download, transcript, search, and account feed capabilities to any Amplifier session
 
 tools:
-  - module: youtube
-    source: git+https://github.com/microsoft/amplifier-youtube@main
+  - module: tool-youtube
+    source: git+https://github.com/microsoft/amplifier-youtube@main#subdirectory=modules/tool-youtube
     config:
       output_dir: ~/downloads
       prefer_transcript: true             # transcript-first mode (default); downloads video + subtitles

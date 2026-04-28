@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, Mock, patch
 import pytest
 from googleapiclient.errors import HttpError
 
-from amplifier_youtube.search_tool import YouTubeSearchTool
+from amplifier_module_tool_youtube.search_tool import YouTubeSearchTool
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -89,7 +89,7 @@ def mock_api_response():
 class TestYouTubeSearchToolNoApiKey:
     @pytest.mark.asyncio
     async def test_search_uses_ytdlp_without_api_key(self, tool_no_key, mock_ytdlp_results):
-        with patch("amplifier_youtube.search_tool.yt_dlp.YoutubeDL") as mock_ydl_cls:
+        with patch("amplifier_module_tool_youtube.search_tool.yt_dlp.YoutubeDL") as mock_ydl_cls:
             _setup_ytdlp(mock_ydl_cls, mock_ytdlp_results)
             result = await tool_no_key.execute({"query": "python tutorial"})
         assert result.success is True
@@ -101,7 +101,7 @@ class TestYouTubeSearchToolNoApiKey:
 
     @pytest.mark.asyncio
     async def test_date_order_uses_ytsearchdate_prefix(self, tool_no_key, mock_ytdlp_results):
-        with patch("amplifier_youtube.search_tool.yt_dlp.YoutubeDL") as mock_ydl_cls:
+        with patch("amplifier_module_tool_youtube.search_tool.yt_dlp.YoutubeDL") as mock_ydl_cls:
             mock_ydl = _setup_ytdlp(mock_ydl_cls, mock_ytdlp_results)
             await tool_no_key.execute({"query": "python tutorial", "order": "date"})
             call_arg = mock_ydl.extract_info.call_args[0][0]
@@ -109,7 +109,7 @@ class TestYouTubeSearchToolNoApiKey:
 
     @pytest.mark.asyncio
     async def test_relevance_order_uses_ytsearch_prefix(self, tool_no_key, mock_ytdlp_results):
-        with patch("amplifier_youtube.search_tool.yt_dlp.YoutubeDL") as mock_ydl_cls:
+        with patch("amplifier_module_tool_youtube.search_tool.yt_dlp.YoutubeDL") as mock_ydl_cls:
             mock_ydl = _setup_ytdlp(mock_ydl_cls, mock_ytdlp_results)
             await tool_no_key.execute({"query": "python tutorial", "order": "relevance"})
             call_arg = mock_ydl.extract_info.call_args[0][0]
@@ -123,7 +123,7 @@ class TestYouTubeSearchToolNoApiKey:
 
     @pytest.mark.asyncio
     async def test_ytdlp_failure_returns_error_result(self, tool_no_key):
-        with patch("amplifier_youtube.search_tool.yt_dlp.YoutubeDL") as mock_cls:
+        with patch("amplifier_module_tool_youtube.search_tool.yt_dlp.YoutubeDL") as mock_cls:
             mock_ydl = MagicMock()
             mock_ydl.extract_info.side_effect = Exception("network error")
             mock_cls.return_value.__enter__ = MagicMock(return_value=mock_ydl)
@@ -137,7 +137,7 @@ class TestYouTubeSearchToolWithApiKey:
     @pytest.mark.asyncio
     async def test_search_uses_api_when_filtered(self, tool_with_key, mock_api_response):
         """A query with an API-only filter (region_code) must route to the Data API."""
-        with patch("amplifier_youtube.search_tool.build") as mock_build:
+        with patch("amplifier_module_tool_youtube.search_tool.build") as mock_build:
             mock_youtube = MagicMock()
             mock_build.return_value = mock_youtube
             mock_youtube.search().list().execute.return_value = mock_api_response
@@ -151,9 +151,9 @@ class TestYouTubeSearchToolWithApiKey:
     @pytest.mark.asyncio
     async def test_api_failure_falls_back_to_ytdlp_fallback(self, tool_with_key, mock_ytdlp_results):
         """Non-quota API error on a filtered request → ytdlp_fallback with degraded_filters."""
-        with patch("amplifier_youtube.search_tool.build") as mock_build:
+        with patch("amplifier_module_tool_youtube.search_tool.build") as mock_build:
             mock_build.side_effect = Exception("transient network error")
-            with patch("amplifier_youtube.search_tool.yt_dlp.YoutubeDL") as mock_ydl_cls:
+            with patch("amplifier_module_tool_youtube.search_tool.yt_dlp.YoutubeDL") as mock_ydl_cls:
                 _setup_ytdlp(mock_ydl_cls, mock_ytdlp_results)
                 result = await tool_with_key.execute({"query": "python tutorial", "region_code": "US"})
         assert result.success is True
@@ -163,7 +163,7 @@ class TestYouTubeSearchToolWithApiKey:
     @pytest.mark.asyncio
     async def test_duration_filter_sent_to_api(self, tool_with_key):
         mock_response = {"items": []}
-        with patch("amplifier_youtube.search_tool.build") as mock_build:
+        with patch("amplifier_module_tool_youtube.search_tool.build") as mock_build:
             mock_youtube = MagicMock()
             mock_build.return_value = mock_youtube
             mock_youtube.search().list().execute.return_value = mock_response
@@ -183,8 +183,8 @@ class TestSmartRouting:
     @pytest.mark.asyncio
     async def test_no_key_simple_query_uses_ytdlp_build_not_called(self, tool_no_key, mock_ytdlp_results):
         """Simple query with no API key → ytdlp, no degraded filters, build never called."""
-        with patch("amplifier_youtube.search_tool.build") as mock_build:
-            with patch("amplifier_youtube.search_tool.yt_dlp.YoutubeDL") as mock_ydl_cls:
+        with patch("amplifier_module_tool_youtube.search_tool.build") as mock_build:
+            with patch("amplifier_module_tool_youtube.search_tool.yt_dlp.YoutubeDL") as mock_ydl_cls:
                 _setup_ytdlp(mock_ydl_cls, mock_ytdlp_results)
                 result = await tool_no_key.execute({"query": "cats"})
         assert result.output["backend"] == "ytdlp"
@@ -194,8 +194,8 @@ class TestSmartRouting:
     @pytest.mark.asyncio
     async def test_no_key_with_duration_filter_warns_and_degrades(self, tool_no_key, mock_ytdlp_results, caplog):
         """No api_key + duration filter → ytdlp, degraded_filters==[duration], warning logged."""
-        with caplog.at_level(logging.WARNING, logger="amplifier_youtube.search_tool"):
-            with patch("amplifier_youtube.search_tool.yt_dlp.YoutubeDL") as mock_ydl_cls:
+        with caplog.at_level(logging.WARNING, logger="amplifier_module_tool_youtube.search_tool"):
+            with patch("amplifier_module_tool_youtube.search_tool.yt_dlp.YoutubeDL") as mock_ydl_cls:
                 _setup_ytdlp(mock_ydl_cls, mock_ytdlp_results)
                 result = await tool_no_key.execute({"query": "cats", "duration": "long"})
         assert result.output["backend"] == "ytdlp"
@@ -208,8 +208,8 @@ class TestSmartRouting:
     @pytest.mark.asyncio
     async def test_api_key_simple_query_uses_ytdlp_not_api(self, tool_with_key, mock_ytdlp_results):
         """Simple query with api_key → ytdlp (no quota spent), build NOT called."""
-        with patch("amplifier_youtube.search_tool.build") as mock_build:
-            with patch("amplifier_youtube.search_tool.yt_dlp.YoutubeDL") as mock_ydl_cls:
+        with patch("amplifier_module_tool_youtube.search_tool.build") as mock_build:
+            with patch("amplifier_module_tool_youtube.search_tool.yt_dlp.YoutubeDL") as mock_ydl_cls:
                 _setup_ytdlp(mock_ydl_cls, mock_ytdlp_results)
                 result = await tool_with_key.execute({"query": "python"})
         assert result.output["backend"] == "ytdlp"
@@ -219,7 +219,7 @@ class TestSmartRouting:
     @pytest.mark.asyncio
     async def test_api_key_region_code_routes_to_api(self, tool_with_key, mock_api_response):
         """region_code is an API-only filter → build is called, backend=='api'."""
-        with patch("amplifier_youtube.search_tool.build") as mock_build:
+        with patch("amplifier_module_tool_youtube.search_tool.build") as mock_build:
             mock_youtube = MagicMock()
             mock_build.return_value = mock_youtube
             mock_youtube.search().list().execute.return_value = mock_api_response
@@ -230,7 +230,7 @@ class TestSmartRouting:
     @pytest.mark.asyncio
     async def test_api_key_viewcount_order_routes_to_api(self, tool_with_key, mock_api_response):
         """order=viewCount is API-only → routes to API, not ytdlp."""
-        with patch("amplifier_youtube.search_tool.build") as mock_build:
+        with patch("amplifier_module_tool_youtube.search_tool.build") as mock_build:
             mock_youtube = MagicMock()
             mock_build.return_value = mock_youtube
             mock_youtube.search().list().execute.return_value = mock_api_response
@@ -241,8 +241,8 @@ class TestSmartRouting:
     @pytest.mark.asyncio
     async def test_order_date_is_not_api_only_routes_to_ytdlp(self, tool_with_key, mock_ytdlp_results):
         """order=date is NOT in _API_ONLY_ORDERS → ytdlp, uses ytsearchdate prefix."""
-        with patch("amplifier_youtube.search_tool.build") as mock_build:
-            with patch("amplifier_youtube.search_tool.yt_dlp.YoutubeDL") as mock_ydl_cls:
+        with patch("amplifier_module_tool_youtube.search_tool.build") as mock_build:
+            with patch("amplifier_module_tool_youtube.search_tool.yt_dlp.YoutubeDL") as mock_ydl_cls:
                 mock_ydl = _setup_ytdlp(mock_ydl_cls, mock_ytdlp_results)
                 result = await tool_with_key.execute({"query": "news", "order": "date"})
                 call_arg = mock_ydl.extract_info.call_args[0][0]
@@ -256,11 +256,11 @@ class TestSmartRouting:
     @pytest.mark.asyncio
     async def test_quota_exhaustion_sets_flag_and_returns_fallback(self, tool_with_key, mock_ytdlp_results):
         """Quota error → ytdlp_fallback + _quota_exhausted=True; next call skips build."""
-        with patch("amplifier_youtube.search_tool.build") as mock_build:
+        with patch("amplifier_module_tool_youtube.search_tool.build") as mock_build:
             mock_youtube = MagicMock()
             mock_build.return_value = mock_youtube
             mock_youtube.search().list().execute.side_effect = make_quota_error()
-            with patch("amplifier_youtube.search_tool.yt_dlp.YoutubeDL") as mock_ydl_cls:
+            with patch("amplifier_module_tool_youtube.search_tool.yt_dlp.YoutubeDL") as mock_ydl_cls:
                 _setup_ytdlp(mock_ydl_cls, mock_ytdlp_results)
                 result = await tool_with_key.execute({"query": "python", "duration": "short"})
 
@@ -271,8 +271,8 @@ class TestSmartRouting:
         assert tool_with_key._quota_exhausted is True
 
         # Second call must not touch the API at all.
-        with patch("amplifier_youtube.search_tool.build") as mock_build2:
-            with patch("amplifier_youtube.search_tool.yt_dlp.YoutubeDL") as mock_ydl_cls2:
+        with patch("amplifier_module_tool_youtube.search_tool.build") as mock_build2:
+            with patch("amplifier_module_tool_youtube.search_tool.yt_dlp.YoutubeDL") as mock_ydl_cls2:
                 _setup_ytdlp(mock_ydl_cls2, mock_ytdlp_results)
                 result2 = await tool_with_key.execute({"query": "python", "duration": "short"})
 
@@ -283,11 +283,11 @@ class TestSmartRouting:
     @pytest.mark.asyncio
     async def test_non_quota_api_error_falls_back_without_setting_flag(self, tool_with_key, mock_ytdlp_results):
         """A non-quota API error → ytdlp_fallback for this request, but flag stays False."""
-        with patch("amplifier_youtube.search_tool.build") as mock_build:
+        with patch("amplifier_module_tool_youtube.search_tool.build") as mock_build:
             mock_youtube = MagicMock()
             mock_build.return_value = mock_youtube
             mock_youtube.search().list().execute.side_effect = Exception("network timeout")
-            with patch("amplifier_youtube.search_tool.yt_dlp.YoutubeDL") as mock_ydl_cls:
+            with patch("amplifier_module_tool_youtube.search_tool.yt_dlp.YoutubeDL") as mock_ydl_cls:
                 _setup_ytdlp(mock_ydl_cls, mock_ytdlp_results)
                 result = await tool_with_key.execute({"query": "python", "duration": "short"})
 
@@ -300,8 +300,8 @@ class TestSmartRouting:
     @pytest.mark.asyncio
     async def test_force_ytdlp_bypasses_api(self, tool_with_key, mock_ytdlp_results):
         """force_backend='ytdlp' must skip the API even with api_key set."""
-        with patch("amplifier_youtube.search_tool.build") as mock_build:
-            with patch("amplifier_youtube.search_tool.yt_dlp.YoutubeDL") as mock_ydl_cls:
+        with patch("amplifier_module_tool_youtube.search_tool.build") as mock_build:
+            with patch("amplifier_module_tool_youtube.search_tool.yt_dlp.YoutubeDL") as mock_ydl_cls:
                 _setup_ytdlp(mock_ydl_cls, mock_ytdlp_results)
                 result = await tool_with_key.execute({"query": "python", "force_backend": "ytdlp"})
         assert result.output["backend"] == "ytdlp"

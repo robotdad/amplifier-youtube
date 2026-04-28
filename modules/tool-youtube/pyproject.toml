@@ -1,5 +1,5 @@
 [project]
-name = "amplifier-youtube"
+name = "amplifier-module-tool-youtube"
 version = "0.2.0"
 description = "YouTube capability module for Amplifier — download, search, and account feed access"
 readme = "README.md"
@@ -12,7 +12,7 @@ dependencies = [
 ]
 
 [project.entry-points."amplifier.modules"]
-"youtube" = "amplifier_youtube:mount"
+"tool-youtube" = "amplifier_module_tool_youtube:mount"
 
 [build-system]
 requires = ["hatchling"]
@@ -22,7 +22,7 @@ build-backend = "hatchling.build"
 package = true
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/amplifier_youtube"]
+packages = ["src/amplifier_module_tool_youtube"]
 
 [tool.hatch.metadata]
 allow-direct-references = true
@@ -33,11 +33,14 @@ dev = [
     "pytest>=8.0.0",
     "pytest-asyncio>=1.0.0",
     "pytest-mock>=3.12.0",
+    "pyright>=1.1.0",
     "ruff>=0.1.0",
 ]
 
-[tool.uv.sources]
-amplifier-core = { git = "https://github.com/microsoft/amplifier-core", branch = "main" }
+[tool.pyright]
+pythonVersion = "3.11"
+venvPath = "."
+venv = ".venv"
 
 [tool.ruff]
 line-length = 120

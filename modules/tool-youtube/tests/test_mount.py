@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from amplifier_youtube import mount
+from amplifier_module_tool_youtube import mount
 
 
 class TestMount:

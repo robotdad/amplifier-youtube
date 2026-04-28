@@ -5,7 +5,7 @@ Tests for TranscriptFetcher and vtt_to_text.
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from amplifier_youtube.transcript import TranscriptFetcher
+from amplifier_module_tool_youtube.transcript import TranscriptFetcher
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -225,7 +225,7 @@ class TestTranscriptFetcherPicksManualOverAuto:
         mock_class.return_value.__enter__.return_value = mock_instance
         mock_class.return_value.__exit__.return_value = False
 
-        with patch("amplifier_youtube.transcript.yt_dlp.YoutubeDL", mock_class):
+        with patch("amplifier_module_tool_youtube.transcript.yt_dlp.YoutubeDL", mock_class):
             result = fetcher.fetch(FAKE_URL, tmp_path, "video")
 
         assert result.available is True
@@ -253,7 +253,7 @@ class TestTranscriptFetcherPicksManualOverAuto:
         mock_class.return_value.__enter__.return_value = mock_instance
         mock_class.return_value.__exit__.return_value = False
 
-        with patch("amplifier_youtube.transcript.yt_dlp.YoutubeDL", mock_class):
+        with patch("amplifier_module_tool_youtube.transcript.yt_dlp.YoutubeDL", mock_class):
             result = fetcher.fetch(FAKE_URL, tmp_path, "video")
 
         assert result.available is True
@@ -280,7 +280,7 @@ class TestTranscriptFetcherPicksManualOverAuto:
         mock_class.return_value.__enter__.return_value = mock_instance
         mock_class.return_value.__exit__.return_value = False
 
-        with patch("amplifier_youtube.transcript.yt_dlp.YoutubeDL", mock_class):
+        with patch("amplifier_module_tool_youtube.transcript.yt_dlp.YoutubeDL", mock_class):
             result = fetcher.fetch(FAKE_URL, tmp_path, "video", prefer_manual=False)
 
         assert result.available is True
@@ -299,7 +299,7 @@ class TestTranscriptFetcherLanguageSelection:
         mock_class.return_value.__enter__.return_value = mock_instance
         mock_class.return_value.__exit__.return_value = False
 
-        with patch("amplifier_youtube.transcript.yt_dlp.YoutubeDL", mock_class):
+        with patch("amplifier_module_tool_youtube.transcript.yt_dlp.YoutubeDL", mock_class):
             result = fetcher.fetch(FAKE_URL, tmp_path, "video", languages=["en"])
 
         assert result.available is False
@@ -329,7 +329,7 @@ class TestTranscriptFetcherLanguageSelection:
         mock_class.return_value.__enter__.return_value = mock_instance
         mock_class.return_value.__exit__.return_value = False
 
-        with patch("amplifier_youtube.transcript.yt_dlp.YoutubeDL", mock_class):
+        with patch("amplifier_module_tool_youtube.transcript.yt_dlp.YoutubeDL", mock_class):
             # "fr" listed first → should be selected even though "es" exists
             result = fetcher.fetch(FAKE_URL, tmp_path, "video", languages=["fr", "es"])
 
@@ -349,7 +349,7 @@ class TestTranscriptFetcherCacheHit:
 
         mock_class = MagicMock()
 
-        with patch("amplifier_youtube.transcript.yt_dlp.YoutubeDL", mock_class):
+        with patch("amplifier_module_tool_youtube.transcript.yt_dlp.YoutubeDL", mock_class):
             result = fetcher.fetch(FAKE_URL, tmp_path, "video", use_cache=True)
 
         # yt-dlp should NOT have been called at all.
@@ -373,7 +373,7 @@ class TestTranscriptFetcherCacheHit:
         mock_class.return_value.__enter__.return_value = mock_instance
         mock_class.return_value.__exit__.return_value = False
 
-        with patch("amplifier_youtube.transcript.yt_dlp.YoutubeDL", mock_class):
+        with patch("amplifier_module_tool_youtube.transcript.yt_dlp.YoutubeDL", mock_class):
             result = fetcher.fetch(FAKE_URL, tmp_path, "video", use_cache=True)
 
         # yt-dlp was called (cache miss).
@@ -393,7 +393,7 @@ class TestTranscriptFetcherCacheHit:
         mock_class.return_value.__enter__.return_value = mock_instance
         mock_class.return_value.__exit__.return_value = False
 
-        with patch("amplifier_youtube.transcript.yt_dlp.YoutubeDL", mock_class):
+        with patch("amplifier_module_tool_youtube.transcript.yt_dlp.YoutubeDL", mock_class):
             result = fetcher.fetch(FAKE_URL, tmp_path, "video", use_cache=False)
 
         mock_class.assert_called()
@@ -410,7 +410,7 @@ class TestTranscriptFetcherCacheHit:
 
         mock_class = MagicMock()
 
-        with patch("amplifier_youtube.transcript.yt_dlp.YoutubeDL", mock_class):
+        with patch("amplifier_module_tool_youtube.transcript.yt_dlp.YoutubeDL", mock_class):
             result = fetcher.fetch(FAKE_URL, tmp_path, "video", use_cache=True)
 
         assert result.available is True
@@ -437,7 +437,7 @@ class TestTranscriptFetcherLangRegionSuffix:
         mock_class.return_value.__enter__.return_value = mock_instance
         mock_class.return_value.__exit__.return_value = False
 
-        with patch("amplifier_youtube.transcript.yt_dlp.YoutubeDL", mock_class):
+        with patch("amplifier_module_tool_youtube.transcript.yt_dlp.YoutubeDL", mock_class):
             result = fetcher.fetch(FAKE_URL, tmp_path, "video", languages=["en"])
 
         assert result.available is True
@@ -458,7 +458,7 @@ class TestTranscriptFetcherSoftFailure:
         mock_class.return_value.__enter__.return_value = mock_instance
         mock_class.return_value.__exit__.return_value = False
 
-        with patch("amplifier_youtube.transcript.yt_dlp.YoutubeDL", mock_class):
+        with patch("amplifier_module_tool_youtube.transcript.yt_dlp.YoutubeDL", mock_class):
             result = fetcher.fetch(FAKE_URL, tmp_path, "video")
 
         assert result.available is False
@@ -474,7 +474,7 @@ class TestTranscriptFetcherSoftFailure:
         mock_class.return_value.__enter__.return_value = mock_instance
         mock_class.return_value.__exit__.return_value = False
 
-        with patch("amplifier_youtube.transcript.yt_dlp.YoutubeDL", mock_class):
+        with patch("amplifier_module_tool_youtube.transcript.yt_dlp.YoutubeDL", mock_class):
             result = fetcher.fetch(FAKE_URL, tmp_path, "video")
 
         assert result.available is False

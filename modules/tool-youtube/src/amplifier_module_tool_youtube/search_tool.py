@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 def build(*args: Any, **kwargs: Any) -> Any:
     """Lazy proxy — delegates to googleapiclient.discovery.build on first API call.
 
-    Defined at module level so tests can patch amplifier_youtube.search_tool.build
+    Defined at module level so tests can patch amplifier_module_tool_youtube.search_tool.build
     without requiring a top-level import of google-api-python-client.
     """
     from googleapiclient.discovery import build as _build

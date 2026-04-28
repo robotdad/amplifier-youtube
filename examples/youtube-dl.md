@@ -1,23 +1,22 @@
 ---
-profile:
+bundle:
   name: youtube-downloader
-  extends: base
+  version: 1.0.0
+  description: YouTube download and transcription assistant
 
-tools:
-  - module: tool-youtube-dl
-    source: git+https://github.com/robotdad/amplifier-module-tool-youtube-dl@main
-    config:
-      output_dir: ~/downloads
-      audio_only: true
+includes:
+  - bundle: git+https://github.com/microsoft/amplifier-foundation@main
+  - bundle: git+https://github.com/microsoft/amplifier-youtube@main
 ---
 
-# YouTube Downloader Profile
+# YouTube Downloader
 
-Enables YouTube audio/video downloading in amplifier sessions.
+A minimal bundle that adds YouTube download, transcript, search, and feed
+capabilities to an Amplifier session.
 
 ## Quick Start
 
-1. Install ffmpeg (required):
+1. Install ffmpeg (required for audio/video processing):
    ```bash
    # macOS
    brew install ffmpeg
@@ -26,146 +25,73 @@ Enables YouTube audio/video downloading in amplifier sessions.
    sudo apt-get install ffmpeg
    ```
 
-2. Activate this profile:
+2. Run:
    ```bash
-   amplifier run --profile youtube-downloader
+   amplifier run --bundle examples/youtube-dl.md
    ```
 
-3. Download in conversation:
+3. Use in conversation:
    ```
-   > Download audio from https://youtube.com/watch?v=dQw4w9WgXcQ
+   > Download and transcribe https://youtube.com/watch?v=...
+   > Search YouTube for "rust programming" tutorials from this year
+   > Show my watch history
    ```
 
-## What It Does
+## What You Get
 
-This profile adds the `tool-youtube-dl` module to your amplifier session, enabling the AI to:
+Three tools are available in your session:
 
-- Download audio from YouTube videos
-- Extract metadata (title, duration, uploader)
-- Cache downloads to avoid re-downloading
-- Convert to MP3 format automatically
+- **youtube-dl** — Download video + fetch transcript (subtitles preferred,
+  auto-captions as fallback). Falls back to Whisper-ready video when no
+  transcript is available.
+- **youtube-search** — Search YouTube. Simple queries use yt-dlp (free);
+  filtered queries (duration, date range, region) use the Data API when
+  an API key is configured.
+- **youtube-feed** — Access watch history, subscriptions, liked videos,
+  recommendations. Requires a cookies file.
 
-## Configuration
+## Custom Configuration
 
-The tool is configured to:
-- Save downloads to `~/downloads/`
-- Extract audio only (not full video)
-- Cache downloaded files
-
-### Custom Configuration
-
-Copy this profile to `~/.amplifier/profiles/my-youtube.md` and adjust settings:
+Override defaults by adding a `tools:` section:
 
 ```yaml
+includes:
+  - bundle: git+https://github.com/microsoft/amplifier-foundation@main
+  - bundle: git+https://github.com/microsoft/amplifier-youtube@main
+
 tools:
-  - module: tool-youtube-dl
-    source: git+https://github.com/robotdad/amplifier-module-tool-youtube-dl@main
+  - module: tool-youtube
+    source: git+https://github.com/microsoft/amplifier-youtube@main#subdirectory=modules/tool-youtube
     config:
       output_dir: ~/my-videos
-      audio_only: false  # Download full video
+      prefer_transcript: false    # legacy mode: audio_only controls output
+      audio_only: false           # download full video (only when prefer_transcript is false)
+      transcript_languages: ["es", "en"]  # prefer Spanish, fall back to English
+      cookies_file: ~/yt-cookies.txt
+      search:
+        api_key: AIza...          # enables rich search filters
+        max_results: 20
 ```
-
-## Example Workflows
-
-### Download Single Video Audio
-
-```
-> Download audio from https://youtube.com/watch?v=...
-```
-
-The AI will:
-1. Extract video metadata
-2. Download best quality audio
-3. Convert to MP3
-4. Save to ~/downloads/
-
-### Download to Custom Location
-
-```
-> Download audio from https://youtube.com/watch?v=... and save to ~/podcasts/
-```
-
-The AI can override the default output directory per request.
-
-### Extract Metadata Only
-
-```
-> Get information about https://youtube.com/watch?v=...
-```
-
-The AI can extract metadata without downloading the full content.
 
 ## Combining with Whisper
 
-Use both tools together for transcription workflows:
+When `transcript_available` is `false` in the download result, the video is
+already saved and ready for Whisper transcription:
 
 ```yaml
----
-profile:
-  name: video-transcription
-  extends: base
-
-tools:
-  - module: tool-youtube-dl
-    source: git+https://github.com/robotdad/amplifier-module-tool-youtube-dl@main
-  - module: tool-whisper
-    source: git+https://github.com/robotdad/amplifier-module-tool-whisper@main
----
+includes:
+  - bundle: git+https://github.com/microsoft/amplifier-foundation@main
+  - bundle: git+https://github.com/microsoft/amplifier-youtube@main
+  - bundle: git+https://github.com/microsoft/amplifier-module-tool-whisper@main
 ```
 
-Then:
-```
-> Download and transcribe https://youtube.com/watch?v=...
-```
-
-The AI will automatically use both tools in sequence.
-
-## Caching Behavior
-
-By default, the tool caches downloads:
-- First download: Fetches from YouTube
-- Subsequent requests: Uses cached file (instant)
-
-This saves bandwidth and time for repeated access to the same content.
+The AI will use both tools: download + transcript first, Whisper only when needed.
 
 ## Troubleshooting
 
-### "yt-dlp is not installed"
-
-The dependency should be installed automatically. If not:
-```bash
-cd amplifier-module-tool-youtube-dl
-uv add yt-dlp
-```
-
-### "ffmpeg not found"
-
-Install ffmpeg for your platform. It's required for audio extraction:
-- macOS: `brew install ffmpeg`
-- Ubuntu: `sudo apt-get install ffmpeg`
-- Windows: Download from ffmpeg.org
-
-### "Failed to download URL"
-
-Common issues:
-- Video is private or removed
-- Age-restricted (may require authentication)
-- Geographic restrictions
-- Network issues
-
-Try the URL in a regular browser first to verify it's accessible.
-
-### "Could not find downloaded audio file"
-
-This means ffmpeg isn't working properly. Verify:
-```bash
-ffmpeg -version
-```
-
-If not found, reinstall ffmpeg.
-
-## Learn More
-
-- [yt-dlp Documentation](https://github.com/yt-dlp/yt-dlp)
-- [Amplifier Profiles Guide](https://github.com/microsoft/amplifier-dev/docs/profiles.md)
-- [Tool Development](https://github.com/microsoft/amplifier-dev/docs/tool-development.md)
+| Problem | Fix |
+|---------|-----|
+| "yt-dlp is not installed" | Should install automatically; if not: `pip install yt-dlp` |
+| "ffmpeg not found" | Install ffmpeg for your platform (see Quick Start) |
+| "Failed to download URL" | Check URL in browser — may be private, age-restricted, or geo-blocked |
+| "cookies may have expired" | Re-export cookies from your browser |
