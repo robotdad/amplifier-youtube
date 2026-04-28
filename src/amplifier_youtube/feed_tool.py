@@ -37,7 +37,7 @@ class YouTubeFeedTool:
         )
 
     @property
-    def input_schema(self) -> dict:
+    def input_schema(self) -> dict[str, Any]:
         return {
             "type": "object",
             "properties": {
@@ -51,7 +51,7 @@ class YouTubeFeedTool:
             "required": ["feed_type"],
         }
 
-    async def execute(self, params: dict[str, Any]) -> ToolResult:
+    async def execute(self, input: dict[str, Any]) -> ToolResult:
         if not self.cookies_file:
             return ToolResult(
                 success=False,
@@ -64,14 +64,14 @@ class YouTubeFeedTool:
                 },
             )
 
-        feed_type = params.get("feed_type")
+        feed_type = input.get("feed_type")
         if feed_type not in self.FEED_MAP:
             return ToolResult(
                 success=False,
                 error={"message": f"Invalid feed_type. Must be one of: {', '.join(self.FEED_MAP)}"},
             )
 
-        limit = params.get("limit", 50)
+        limit = input.get("limit", 50)
         yt_target = self.FEED_MAP[feed_type]
 
         try:
@@ -83,7 +83,7 @@ class YouTubeFeedTool:
                 "playlistend": limit,
             }
 
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:  # type: ignore[arg-type]
                 info = ydl.extract_info(yt_target, download=False)
 
             if info is None:

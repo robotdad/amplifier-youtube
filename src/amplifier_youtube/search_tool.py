@@ -40,7 +40,7 @@ class YouTubeSearchTool:
         )
 
     @property
-    def input_schema(self) -> dict:
+    def input_schema(self) -> dict[str, Any]:
         return {
             "type": "object",
             "properties": {
@@ -70,21 +70,21 @@ class YouTubeSearchTool:
             "required": ["query"],
         }
 
-    async def execute(self, params: dict[str, Any]) -> ToolResult:
-        query = params.get("query")
+    async def execute(self, input: dict[str, Any]) -> ToolResult:
+        query = input.get("query")
         if not query:
             return ToolResult(success=False, error={"message": "Missing required parameter: query"})
 
-        max_results = params.get("max_results", self.default_max_results)
+        max_results = input.get("max_results", self.default_max_results)
 
         if self.api_key:
             try:
-                return await self._search_with_api(params, max_results)
+                return await self._search_with_api(input, max_results)
             except Exception as e:
                 logger.warning(f"YouTube Data API failed ({e}), falling back to yt-dlp")
 
         try:
-            return await self._search_with_ytdlp(params, max_results)
+            return await self._search_with_ytdlp(input, max_results)
         except Exception as e:
             logger.error(f"yt-dlp search failed: {e}", exc_info=True)
             return ToolResult(success=False, error={"message": str(e), "type": type(e).__name__})
@@ -141,7 +141,7 @@ class YouTubeSearchTool:
 
         ydl_opts = {"quiet": True, "extract_flat": True, "no_warnings": True}
 
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:  # type: ignore[arg-type]
             info = ydl.extract_info(search_query, download=False)
 
         results = []

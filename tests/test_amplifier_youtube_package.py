@@ -75,4 +75,3 @@ class TestAmplifierYoutubePackageImports:
         from amplifier_youtube import mount  # noqa: F401
 
         assert hasattr(amplifier_youtube, "mount"), "mount() must be present in amplifier_youtube after Task 5"
-

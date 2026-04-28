@@ -22,7 +22,7 @@ __all__ = [
 ]
 
 
-async def mount(coordinator: Any, config: dict[str, Any] | None = None) -> dict[str, Any]:
+async def mount(coordinator: Any, config: dict[str, Any] | None = None) -> None:
     """Mount all three YouTube tools into the coordinator."""
     cfg = config or {}
     cookies_file = cfg.get("cookies_file")
@@ -36,8 +36,3 @@ async def mount(coordinator: Any, config: dict[str, Any] | None = None) -> dict[
     await coordinator.mount("tools", feed_tool, name=feed_tool.name)
 
     logger.info("youtube module mounted: youtube-dl, youtube-search, youtube-feed")
-    return {
-        "name": "youtube",
-        "version": "0.2.0",
-        "provides": ["youtube-dl", "youtube-search", "youtube-feed"],
-    }

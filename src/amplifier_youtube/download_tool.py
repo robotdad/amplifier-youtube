@@ -31,7 +31,7 @@ class YouTubeDownloadTool:
         return "Download audio or video from YouTube with metadata extraction and screenshot capture"
 
     @property
-    def input_schema(self) -> dict:
+    def input_schema(self) -> dict[str, Any]:
         return {
             "type": "object",
             "properties": {
@@ -88,7 +88,9 @@ class YouTubeDownloadTool:
             screenshot_path = None
             if capture_screenshot:
                 if not isinstance(screenshot_time, str):
-                    return ToolResult(success=False, error={"message": "screenshot_time must be a string in HH:MM:SS format"})
+                    return ToolResult(
+                        success=False, error={"message": "screenshot_time must be a string in HH:MM:SS format"}
+                    )
                 screenshot_filename = (
                     Path(output_filename).with_suffix(".jpg").name if output_filename else "screenshot.jpg"
                 )
