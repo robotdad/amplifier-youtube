@@ -1,0 +1,123 @@
+# DTU profile for amplifier-youtube validation / reality check.
+#
+# Clones the repo from GitHub, installs the tool-youtube module with all
+# dev dependencies (including amplifier-core from PyPI), runs the test
+# suite, and verifies that imports + the mount() entry point are healthy.
+#
+# Launch with:
+#   amplifier-digital-twin launch \
+#     .amplifier/digital-twin-universe/profiles/youtube-validation.yaml
+#
+# The repo URL and ref are overridable via --var:
+#   --var REPO_URL=https://github.com/robotdad/amplifier-youtube.git
+#   --var REPO_REF=main
+name: amplifier-youtube-validation
+description: >
+  Validates the amplifier-youtube bundle by cloning the repo, installing
+  the tool-youtube module with dev deps, and running the full test suite.
+base:
+  image: ubuntu:24.04
+
+provision:
+  setup_cmds:
+    # System deps: ffmpeg for media tooling, git/curl for fetching code,
+    # build-essential in case any wheel needs to compile from sdist.
+    - apt-get update
+    - >
+      DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends
+      git curl ca-certificates ffmpeg build-essential python3 python3-venv
+
+    # uv for fast, reproducible Python env management.
+    - curl -LsSf https://astral.sh/uv/install.sh | sh
+
+    # Verify uv is on PATH.
+    - export PATH="/root/.local/bin:$PATH" && uv --version
+
+    # Clone the repo. REPO_URL/REPO_REF default to the published main.
+    - git clone "${REPO_URL:-https://github.com/robotdad/amplifier-youtube.git}" /root/amplifier-youtube
+    - cd /root/amplifier-youtube && git checkout "${REPO_REF:-main}" && git rev-parse HEAD
+
+    # Install the module with all dev dependencies (amplifier-core, pytest, etc).
+    # NOTE: pyproject.toml references README.md, but the canonical README lives
+    # at the repo root (not inside modules/tool-youtube/). Create a stub so
+    # hatchling's build_editable doesn't error. This is a workaround for a
+    # real packaging gap that should eventually be fixed in the repo itself.
+    - |
+      set -euo pipefail
+      export PATH="/root/.local/bin:$PATH"
+      cd /root/amplifier-youtube/modules/tool-youtube
+      [ -f README.md ] || ln -sf ../../README.md README.md
+      uv sync --all-groups
+
+    # Quick smoke checks: the package imports and mount() is exposed.
+    - |
+      set -euo pipefail
+      export PATH="/root/.local/bin:$PATH"
+      cd /root/amplifier-youtube/modules/tool-youtube
+      uv run python -c "import amplifier_module_tool_youtube as m; print('package import ok:', m.__name__)"
+      uv run python -c "from amplifier_module_tool_youtube import mount; import inspect; assert callable(mount) and inspect.iscoroutinefunction(mount); print('mount() ok: async callable')"
+
+    # Run the full test suite. Test failures are reported as a finding,
+    # NOT a provisioning failure -- we want the env to stay up so the user
+    # can inspect failures, iterate on fixes via `update`, and run targeted
+    # commands. The exit code is recorded to /var/run/pytest.exit-code and
+    # surfaced via the readiness check.
+    - |
+      export PATH="/root/.local/bin:$PATH"
+      cd /root/amplifier-youtube/modules/tool-youtube
+      set +e
+      uv run pytest -v 2>&1 | tee /var/log/pytest.log
+      rc=${PIPESTATUS[0]}
+      set -e
+      echo "$rc" > /var/run/pytest.exit-code
+      tail -3 /var/log/pytest.log
+      echo "pytest exit code: $rc (recorded to /var/run/pytest.exit-code)"
+
+    # Build a tiny mount() integration check using a stub coordinator.
+    # Validates that all three tools register without raising.
+    - |
+      set -euo pipefail
+      export PATH="/root/.local/bin:$PATH"
+      cd /root/amplifier-youtube/modules/tool-youtube
+      uv run python - <<'PY'
+      import asyncio
+      from amplifier_module_tool_youtube import mount
+
+      class StubCoordinator:
+          def __init__(self):
+              self.mounted = []
+          async def mount(self, trait, instance, name=None):
+              self.mounted.append((trait, name or getattr(instance, 'name', None)))
+
+      async def main():
+          coord = StubCoordinator()
+          result = await mount(coord, {})
+          assert result is None, f"mount() should return None, got {result!r}"
+          tools = [n for t, n in coord.mounted if t == "tools"]
+          expected = {"youtube-dl", "youtube-search", "youtube-feed"}
+          assert set(tools) == expected, f"missing tools: {expected - set(tools)}"
+          print("mount() integration ok: registered", sorted(tools))
+
+      asyncio.run(main())
+      PY
+
+    # Marker file for readiness check.
+    - touch /var/run/youtube-validation-ready
+
+readiness:
+  - name: validation-complete
+    command: "test -f /var/run/youtube-validation-ready && grep -E 'passed|failed' /var/log/pytest.log"
+
+update:
+  refresh_pypi: false
+  cmds:
+    - |
+      set -euo pipefail
+      export PATH="/root/.local/bin:$PATH"
+      cd /root/amplifier-youtube
+      git fetch --all
+      git reset --hard "origin/${REPO_REF:-main}"
+      cd modules/tool-youtube
+      uv sync --all-groups
+      uv run pytest -v > /var/log/pytest.log 2>&1
+      tail -20 /var/log/pytest.log
