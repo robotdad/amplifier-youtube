@@ -75,7 +75,9 @@ class TestYouTubeDownloadToolAudioDownload:
             with patch.object(
                 youtube_tool.loader, "download_audio", return_value=Path("/tmp/test_downloads/audio.mp3")
             ):
-                result = await youtube_tool.execute({"url": "https://youtube.com/watch?v=test"})
+                result = await youtube_tool.execute(
+                    {"url": "https://youtube.com/watch?v=test", "prefer_transcript": False}
+                )
 
                 assert result.success is True
                 assert result.output["path"] == "/tmp/test_downloads/audio.mp3"
@@ -88,7 +90,13 @@ class TestYouTubeDownloadToolAudioDownload:
             with patch.object(
                 youtube_tool.loader, "download_audio", return_value=Path("/tmp/test_downloads/custom.mp3")
             ) as mock_download:
-                await youtube_tool.execute({"url": "https://youtube.com/watch?v=test", "output_filename": "custom.mp3"})
+                await youtube_tool.execute(
+                    {
+                        "url": "https://youtube.com/watch?v=test",
+                        "output_filename": "custom.mp3",
+                        "prefer_transcript": False,
+                    }
+                )
 
                 mock_download.assert_called_once_with(
                     "https://youtube.com/watch?v=test",
@@ -104,7 +112,9 @@ class TestYouTubeDownloadToolAudioDownload:
             with patch.object(
                 youtube_tool.loader, "download_audio", return_value=Path("/tmp/test_downloads/audio.mp3")
             ) as mock_download:
-                await youtube_tool.execute({"url": "https://youtube.com/watch?v=test", "use_cache": False})
+                await youtube_tool.execute(
+                    {"url": "https://youtube.com/watch?v=test", "use_cache": False, "prefer_transcript": False}
+                )
 
                 mock_download.assert_called_once_with(
                     "https://youtube.com/watch?v=test",
@@ -223,7 +233,9 @@ class TestYouTubeDownloadToolErrorHandling:
         """Test handling of download failures."""
         with patch.object(youtube_tool.loader, "load", return_value=mock_video_info):
             with patch.object(youtube_tool.loader, "download_audio", side_effect=ValueError("Download failed")):
-                result = await youtube_tool.execute({"url": "https://youtube.com/watch?v=test"})
+                result = await youtube_tool.execute(
+                    {"url": "https://youtube.com/watch?v=test", "prefer_transcript": False}
+                )
 
                 assert result.success is False
                 assert "Download failed" in result.error["message"]
@@ -250,7 +262,9 @@ class TestYouTubeDownloadToolMetadata:
             with patch.object(
                 youtube_tool.loader, "download_audio", return_value=Path("/tmp/test_downloads/audio.mp3")
             ):
-                result = await youtube_tool.execute({"url": "https://youtube.com/watch?v=test"})
+                result = await youtube_tool.execute(
+                    {"url": "https://youtube.com/watch?v=test", "prefer_transcript": False}
+                )
 
                 metadata = result.output["metadata"]
                 assert metadata["source"] == "https://youtube.com/watch?v=test"

@@ -9,7 +9,7 @@ resolution-markers = [
 [[package]]
 name = "amplifier-core"
 version = "1.3.3"
-source = { git = "https://github.com/microsoft/amplifier-core?branch=main#8b1c3d74620f6fb167249e30d72e3db1c5d46ca1" }
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
     { name = "pydantic" },
@@ -17,9 +17,19 @@ dependencies = [
     { name = "tomli" },
     { name = "typing-extensions" },
 ]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5d/9b/c1831daf9f19f819c552fe8a9fd1c11366413e543b1d2b41c60f910c4f1b/amplifier_core-1.3.3-cp311-abi3-macosx_10_12_x86_64.whl", hash = "sha256:eef372360758b28966bde5488422ce097b1c12cae2bdd5f0736dbc5eb19e6f6c", size = 8101195, upload-time = "2026-03-23T14:44:41.21Z" },
+    { url = "https://files.pythonhosted.org/packages/3b/19/0348e6b9e7731f5d17ec15cfc155118f12602bd13be264f511d7d262d973/amplifier_core-1.3.3-cp311-abi3-macosx_11_0_arm64.whl", hash = "sha256:514edd6fcb59299049730ecf7e5fc1760ac8be73b8ac35c72aafbebb1caf4e92", size = 7220842, upload-time = "2026-03-23T14:44:43.829Z" },
+    { url = "https://files.pythonhosted.org/packages/3b/bc/80abe390d5023b2bedb0e79235075c43dc6dfd93fa5d6819f674157a71fb/amplifier_core-1.3.3-cp311-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:2e6b1ce4c39993d1aa510719051d1864726ba603179a0ed830180d3b6798cc55", size = 7599714, upload-time = "2026-03-23T14:44:46.855Z" },
+    { url = "https://files.pythonhosted.org/packages/16/03/7299e57a263f6ef3a77dc9fd94384f4b9f7e44111a0119037c1b0ea25e69/amplifier_core-1.3.3-cp311-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:09adf35c52461b297b1aef119dda6c8b209af1b2eb82bd00702c228db8458937", size = 8637800, upload-time = "2026-03-23T14:44:49.138Z" },
+    { url = "https://files.pythonhosted.org/packages/85/62/09d8c57fd97bd9b9e5851da13cd902fc431c80d7a364476b8aae70f2b2c0/amplifier_core-1.3.3-cp311-abi3-win_amd64.whl", hash = "sha256:c09cadb6fe104645386742ebef893f549ffa779f7acc7ec42d5bd949348f2eea", size = 8894201, upload-time = "2026-03-23T14:44:51.892Z" },
+    { url = "https://files.pythonhosted.org/packages/63/80/816f0aec391e20218340fe108c95208e236297c80903d58a9290d83c902c/amplifier_core-1.3.3-cp311-abi3-win_arm64.whl", hash = "sha256:263c43010e1e78668ff34ecddfa0444727bd9a8787d8dc2286a8d3fa619b48de", size = 7666984, upload-time = "2026-03-23T14:44:54.508Z" },
+    { url = "https://files.pythonhosted.org/packages/ab/9a/61003612d9c94b22dd4470f0fe82c1e68f52e7868c8f76b71cdc76471665/amplifier_core-1.3.3-cp313-cp313t-win_arm64.whl", hash = "sha256:883779eb5acf298048a6afa3178a59cfc29d1f05c413d8446e0f6f2340cda794", size = 7659998, upload-time = "2026-03-23T14:44:56.638Z" },
+    { url = "https://files.pythonhosted.org/packages/36/36/ff422fab371c63bde16c8fb2f913265a9e2d2fef61bcce665a5d59124907/amplifier_core-1.3.3-cp314-cp314t-win_arm64.whl", hash = "sha256:2407881ca22feb23f92f7b2606b7b5e99f7f4fccf8b9908dad6c0640ee6a3f64", size = 7663014, upload-time = "2026-03-23T14:44:59.025Z" },
+]
 
 [[package]]
-name = "amplifier-youtube"
+name = "amplifier-module-tool-youtube"
 version = "0.2.0"
 source = { editable = "." }
 dependencies = [
@@ -30,6 +40,7 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "amplifier-core" },
+    { name = "pyright" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "pytest-mock" },
@@ -44,7 +55,8 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "amplifier-core", git = "https://github.com/microsoft/amplifier-core?branch=main" },
+    { name = "amplifier-core" },
+    { name = "pyright", specifier = ">=1.1.0" },
     { name = "pytest", specifier = ">=8.0.0" },
     { name = "pytest-asyncio", specifier = ">=1.0.0" },
     { name = "pytest-mock", specifier = ">=3.12.0" },
@@ -409,6 +421,15 @@ wheels = [
 ]
 
 [[package]]
+name = "nodeenv"
+version = "1.10.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/24/bf/d1bda4f6168e0b2e9e5958945e01910052158313224ada5ce1fb2e1113b8/nodeenv-1.10.0.tar.gz", hash = "sha256:996c191ad80897d076bdfba80a41994c2b47c68e224c542b48feba42ba00f8bb", size = 55611, upload-time = "2025-12-20T14:08:54.006Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/88/b2/d0896bdcdc8d28a7fc5717c305f1a861c26e18c05047949fb371034d98bd/nodeenv-1.10.0-py2.py3-none-any.whl", hash = "sha256:5bb13e3eed2923615535339b3c620e76779af4cb4c6a90deccc9e36b274d3827", size = 23438, upload-time = "2025-12-20T14:08:52.782Z" },
+]
+
+[[package]]
 name = "packaging"
 version = "25.0"
 source = { registry = "https://pypi.org/simple" }
@@ -607,6 +628,19 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/f3/91/9c6ee907786a473bf81c5f53cf703ba0957b23ab84c264080fb5a450416f/pyparsing-3.3.2.tar.gz", hash = "sha256:c777f4d763f140633dcb6d8a3eda953bf7a214dc4eff598413c070bcdc117cbc", size = 6851574, upload-time = "2026-01-21T03:57:59.36Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/10/bd/c038d7cc38edc1aa5bf91ab8068b63d4308c66c4c8bb3cbba7dfbc049f9c/pyparsing-3.3.2-py3-none-any.whl", hash = "sha256:850ba148bd908d7e2411587e247a1e4f0327839c40e2e5e6d05a007ecc69911d", size = 122781, upload-time = "2026-01-21T03:57:55.912Z" },
+]
+
+[[package]]
+name = "pyright"
+version = "1.1.409"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "nodeenv" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/51/4e/3aa27f74211522dba7e9cbc3e74de779c6d4b654c54e50a4840623be8014/pyright-1.1.409.tar.gz", hash = "sha256:986ee05beca9e077c165758ad123667c679e050059a2546aa02473930394bc93", size = 4430434, upload-time = "2026-04-23T11:02:03.799Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/16/6b/330d8ebae582b30c2959a1ef4c3bc344ebde48c2ff0c3f113c4710735e11/pyright-1.1.409-py3-none-any.whl", hash = "sha256:aa3ea228cab90c845c7a60d28db7a844c04315356392aa09fafcee98c8c22fb3", size = 6438161, upload-time = "2026-04-23T11:02:01.309Z" },
 ]
 
 [[package]]

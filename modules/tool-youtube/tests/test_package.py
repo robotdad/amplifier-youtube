@@ -38,6 +38,8 @@ class TestAmplifierYoutubePackageImports:
             "YouTubeDownloadTool",
             "YouTubeSearchTool",
             "YouTubeFeedTool",
+            "TranscriptFetcher",
+            "TranscriptResult",
             "mount",
         }
 

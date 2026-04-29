@@ -13,10 +13,10 @@ class TestMount:
         coordinator = MagicMock()
         coordinator.mount = AsyncMock()
         result = await mount(coordinator)
+        assert result is None
         assert coordinator.mount.call_count == 3
         names = {call[1]["name"] for call in coordinator.mount.call_args_list}
         assert names == {"youtube-dl", "youtube-search", "youtube-feed"}
-        assert set(result["provides"]) == {"youtube-dl", "youtube-search", "youtube-feed"}
 
     @pytest.mark.asyncio
     async def test_mount_distributes_search_config(self):
@@ -36,9 +36,9 @@ class TestMount:
         assert feed_tool.cookies_file == "~/cookies.txt"
 
     @pytest.mark.asyncio
-    async def test_mount_returns_correct_manifest(self):
+    async def test_mount_returns_none(self):
+        """mount() returns None — registration is a side-effect, not a manifest."""
         coordinator = MagicMock()
         coordinator.mount = AsyncMock()
         result = await mount(coordinator)
-        assert result["name"] == "youtube"
-        assert result["version"] == "0.2.0"
+        assert result is None
